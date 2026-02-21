@@ -14,6 +14,328 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          description: string | null
+          earned_at: string
+          icon: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          description?: string | null
+          earned_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          description?: string | null
+          earned_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      budgets: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          month: number
+          monthly_limit: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          month: number
+          monthly_limit: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          month?: number
+          monthly_limit?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      dreams: {
+        Row: {
+          created_at: string
+          current_amount: number
+          description: string | null
+          id: string
+          image_url: string | null
+          priority: string
+          status: string
+          target_amount: number | null
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_amount?: number
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          priority?: string
+          status?: string
+          target_amount?: number | null
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_amount?: number
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          priority?: string
+          status?: string
+          target_amount?: number | null
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goal_milestones: {
+        Row: {
+          created_at: string
+          goal_id: string
+          id: string
+          is_completed: boolean
+          medal: string | null
+          name: string
+          target_value: number
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          created_at?: string
+          goal_id: string
+          id?: string
+          is_completed?: boolean
+          medal?: string | null
+          name: string
+          target_value: number
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          created_at?: string
+          goal_id?: string
+          id?: string
+          is_completed?: boolean
+          medal?: string | null
+          name?: string
+          target_value?: number
+          user_id?: string
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_milestones_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          category: string
+          created_at: string
+          current_value: number | null
+          deadline: string | null
+          description: string | null
+          goal_type: string
+          id: string
+          is_main: boolean
+          name: string
+          priority: string
+          status: string
+          target_value: number | null
+          updated_at: string
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          current_value?: number | null
+          deadline?: string | null
+          description?: string | null
+          goal_type?: string
+          id?: string
+          is_main?: boolean
+          name: string
+          priority?: string
+          status?: string
+          target_value?: number | null
+          updated_at?: string
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          current_value?: number | null
+          deadline?: string | null
+          description?: string | null
+          goal_type?: string
+          id?: string
+          is_main?: boolean
+          name?: string
+          priority?: string
+          status?: string
+          target_value?: number | null
+          updated_at?: string
+          user_id?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      habit_logs: {
+        Row: {
+          completed_at: string
+          created_at: string
+          habit_id: string
+          id: string
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          attribute: string | null
+          best_streak: number
+          created_at: string
+          description: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          name: string
+          streak: number
+          updated_at: string
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          attribute?: string | null
+          best_streak?: number
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          streak?: number
+          updated_at?: string
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          attribute?: string | null
+          best_streak?: number
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          streak?: number
+          updated_at?: string
+          user_id?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      investments: {
+        Row: {
+          asset_type: string
+          average_price: number
+          created_at: string
+          current_price: number
+          dividends_total: number
+          id: string
+          name: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_type: string
+          average_price?: number
+          created_at?: string
+          current_price?: number
+          dividends_total?: number
+          id?: string
+          name: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_type?: string
+          average_price?: number
+          created_at?: string
+          current_price?: number
+          dividends_total?: number
+          id?: string
+          name?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -53,6 +375,104 @@ export type Database = {
           updated_at?: string
           user_id?: string
           xp?: number
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          estimated_minutes: number | null
+          id: string
+          parent_task_id: string | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          parent_task_id?: string | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          parent_task_id?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          account: string | null
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_recurring: boolean
+          payment_method: string | null
+          transaction_date: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account?: string | null
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean
+          payment_method?: string | null
+          transaction_date?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account?: string | null
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean
+          payment_method?: string | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
