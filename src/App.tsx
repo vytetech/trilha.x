@@ -11,10 +11,17 @@ import Signup from "@/pages/Signup";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
+import TasksPage from "@/pages/TasksPage";
+import HabitsPage from "@/pages/HabitsPage";
+import GoalsPage from "@/pages/GoalsPage";
+import FinancePage from "@/pages/FinancePage";
+import InvestmentsPage from "@/pages/InvestmentsPage";
+import DreamsPage from "@/pages/DreamsPage";
+import ReportsPage from "@/pages/ReportsPage";
+import RankingPage from "@/pages/RankingPage";
 import SettingsPage from "@/pages/SettingsPage";
-import PlaceholderPage from "@/pages/PlaceholderPage";
+import LandingPage from "@/pages/LandingPage";
 import NotFound from "@/pages/NotFound";
-import { CheckSquare, Repeat, Target, Wallet, TrendingUp, BarChart3, Trophy } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +33,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -34,13 +41,14 @@ const App = () => (
 
             <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/tasks" element={<PlaceholderPage title="Tarefas" description="Gerencie suas tarefas diárias e mantenha a produtividade em alta." icon={CheckSquare} />} />
-              <Route path="/habits" element={<PlaceholderPage title="Hábitos" description="Crie e acompanhe hábitos positivos para transformar sua rotina." icon={Repeat} />} />
-              <Route path="/goals" element={<PlaceholderPage title="Metas" description="Defina metas claras e acompanhe seu progresso até alcançá-las." icon={Target} />} />
-              <Route path="/finances" element={<PlaceholderPage title="Financeiro" description="Controle receitas, despesas e acompanhe sua saúde financeira." icon={Wallet} />} />
-              <Route path="/investments" element={<PlaceholderPage title="Investimentos" description="Acompanhe seu portfólio e tome decisões inteligentes." icon={TrendingUp} />} />
-              <Route path="/reports" element={<PlaceholderPage title="Relatórios" description="Visualize gráficos e análises detalhadas da sua evolução." icon={BarChart3} />} />
-              <Route path="/ranking" element={<PlaceholderPage title="Ranking" description="Compare seu progresso e conquistas com outros usuários." icon={Trophy} />} />
+              <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/habits" element={<HabitsPage />} />
+              <Route path="/goals" element={<GoalsPage />} />
+              <Route path="/finances" element={<FinancePage />} />
+              <Route path="/investments" element={<InvestmentsPage />} />
+              <Route path="/dreams" element={<DreamsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/ranking" element={<RankingPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
 

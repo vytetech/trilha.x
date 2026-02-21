@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   Zap,
+  Sparkles,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +33,7 @@ const menuItems = [
   { title: "Metas", url: "/goals", icon: Target },
   { title: "Financeiro", url: "/finances", icon: Wallet },
   { title: "Investimentos", url: "/investments", icon: TrendingUp },
+  { title: "Sonhos", url: "/dreams", icon: Sparkles },
   { title: "Relatórios", url: "/reports", icon: BarChart3 },
   { title: "Ranking", url: "/ranking", icon: Trophy },
   { title: "Configurações", url: "/settings", icon: Settings },
