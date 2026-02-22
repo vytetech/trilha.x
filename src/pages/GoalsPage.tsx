@@ -59,10 +59,12 @@ export default function GoalsPage() {
     toast({ title: "Meta criada! 🎯" });
   };
 
-  const updateGoalValue = async (id: string, value: number, target: number) => {
-    const status = value >= target ? "completed" : "active";
-    await supabase.from("goals").update({ current_value: value, status }).eq("id", id);
+  const addToGoalValue = async (id: string, addAmount: number, currentValue: number, target: number) => {
+    const newValue = currentValue + addAmount;
+    const status = newValue >= target ? "completed" : "active";
+    await supabase.from("goals").update({ current_value: newValue, status }).eq("id", id);
     if (status === "completed") toast({ title: "Meta concluída! 🏆" });
+    else toast({ title: `+${addAmount} adicionado à meta!` });
     fetchGoals();
   };
 
@@ -180,7 +182,8 @@ export default function GoalsPage() {
               </div>
               {goal.status !== "completed" && (
                 <div className="mt-3 flex gap-2">
-                  <Input type="number" placeholder="Atualizar valor" className="bg-secondary border-border h-8 text-sm" onKeyDown={(e) => { if (e.key === "Enter") updateGoalValue(goal.id, Number((e.target as HTMLInputElement).value), goal.target_value); }} />
+                  <Input type="number" placeholder="Adicionar valor" className="bg-secondary border-border h-8 text-sm" onKeyDown={(e) => { if (e.key === "Enter") { const val = Number((e.target as HTMLInputElement).value); if (val > 0) { addToGoalValue(goal.id, val, goal.current_value, goal.target_value); (e.target as HTMLInputElement).value = ""; } } }} />
+                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={(e) => { const input = (e.currentTarget.previousElementSibling as HTMLInputElement); const val = Number(input?.value); if (val > 0) { addToGoalValue(goal.id, val, goal.current_value, goal.target_value); input.value = ""; } }}>+ Adicionar</Button>
                 </div>
               )}
             </motion.div>
