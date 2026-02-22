@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Target, Plus, Trash2, Trophy, Clock, TrendingUp } from "lucide-react";
+import { Target, Plus, Trash2, Trophy, Clock, TrendingUp, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -31,13 +31,16 @@ interface Goal {
 const catLabels: Record<string, string> = { financial: "Financeira", professional: "Profissional", health: "Saúde", personal: "Pessoal", studies: "Estudos" };
 const statusColors: Record<string, string> = { active: "bg-primary/20 text-primary", delayed: "bg-orange-500/20 text-orange-400", completed: "bg-green-500/20 text-green-400" };
 
+const emptyForm = { name: "", description: "", category: "personal", goal_type: "custom", target_value: "", deadline: "", priority: "medium", xp_reward: "50" };
+
 export default function GoalsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [filter, setFilter] = useState("all");
-  const [form, setForm] = useState({ name: "", description: "", category: "personal", goal_type: "custom", target_value: "", deadline: "", priority: "medium", xp_reward: "50" });
+  const [form, setForm] = useState(emptyForm);
 
   const fetchGoals = async () => {
     if (!user) return;
@@ -47,16 +50,44 @@ export default function GoalsPage() {
 
   useEffect(() => { fetchGoals(); }, [user]);
 
-  const createGoal = async () => {
-    if (!user || !form.name.trim()) return;
-    await supabase.from("goals").insert({
-      user_id: user.id, name: form.name, description: form.description || null, category: form.category, goal_type: form.goal_type,
-      target_value: Number(form.target_value) || 0, deadline: form.deadline || null, priority: form.priority, xp_reward: Number(form.xp_reward) || 50,
+  const openCreate = () => {
+    setEditingGoal(null);
+    setForm(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (goal: Goal) => {
+    setEditingGoal(goal);
+    setForm({
+      name: goal.name,
+      description: goal.description || "",
+      category: goal.category,
+      goal_type: goal.goal_type,
+      target_value: String(goal.target_value),
+      deadline: goal.deadline || "",
+      priority: goal.priority,
+      xp_reward: String(goal.xp_reward),
     });
-    setForm({ name: "", description: "", category: "personal", goal_type: "custom", target_value: "", deadline: "", priority: "medium", xp_reward: "50" });
+    setDialogOpen(true);
+  };
+
+  const saveGoal = async () => {
+    if (!user || !form.name.trim()) return;
+    const payload = {
+      name: form.name, description: form.description || null, category: form.category, goal_type: form.goal_type,
+      target_value: Number(form.target_value) || 0, deadline: form.deadline || null, priority: form.priority, xp_reward: Number(form.xp_reward) || 50,
+    };
+    if (editingGoal) {
+      await supabase.from("goals").update(payload).eq("id", editingGoal.id);
+      toast({ title: "Meta atualizada! ✏️" });
+    } else {
+      await supabase.from("goals").insert({ ...payload, user_id: user.id });
+      toast({ title: "Meta criada! 🎯" });
+    }
+    setForm(emptyForm);
+    setEditingGoal(null);
     setDialogOpen(false);
     fetchGoals();
-    toast({ title: "Meta criada! 🎯" });
   };
 
   const addToGoalValue = async (id: string, addAmount: number, currentValue: number, target: number) => {
@@ -91,10 +122,10 @@ export default function GoalsPage() {
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Target className="h-6 w-6 text-primary" /> Metas</h1>
           <p className="text-sm text-muted-foreground mt-1">Defina objetivos e acompanhe seu progresso</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Nova Meta</Button></DialogTrigger>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingGoal(null); }}>
+          <DialogTrigger asChild><Button className="gap-2" onClick={openCreate}><Plus className="h-4 w-4" /> Nova Meta</Button></DialogTrigger>
           <DialogContent className="bg-card border-border max-w-lg">
-            <DialogHeader><DialogTitle>Criar Meta</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editingGoal ? "Editar Meta" : "Criar Meta"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Nome</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="bg-secondary border-border" /></div>
               <div className="space-y-2"><Label>Descrição</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="bg-secondary border-border" /></div>
@@ -122,7 +153,7 @@ export default function GoalsPage() {
                 <div className="space-y-2"><Label>Prazo</Label><Input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} className="bg-secondary border-border" /></div>
                 <div className="space-y-2"><Label>XP</Label><Input type="number" value={form.xp_reward} onChange={(e) => setForm({ ...form, xp_reward: e.target.value })} className="bg-secondary border-border" /></div>
               </div>
-              <Button onClick={createGoal} className="w-full">Criar Meta</Button>
+              <Button onClick={saveGoal} className="w-full">{editingGoal ? "Salvar Alterações" : "Criar Meta"}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -172,6 +203,7 @@ export default function GoalsPage() {
                 </div>
                 <div className="flex gap-1">
                   {!goal.is_main && <button onClick={() => toggleMain(goal.id)} className="text-muted-foreground hover:text-primary" title="Definir como principal"><Trophy className="h-4 w-4" /></button>}
+                  <button onClick={() => openEdit(goal)} className="text-muted-foreground hover:text-primary" title="Editar meta"><Pencil className="h-4 w-4" /></button>
                   <button onClick={() => deleteGoal(goal.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </div>
