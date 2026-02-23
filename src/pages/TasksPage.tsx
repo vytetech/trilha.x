@@ -68,6 +68,8 @@ export default function TasksPage() {
   const [view, setView] = useState<"kanban" | "week" | "month">("kanban");
   const [weekRef, setWeekRef] = useState(new Date());
   const [monthRef, setMonthRef] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [dayDetailOpen, setDayDetailOpen] = useState(false);
 
   const fetchData = async () => {
     if (!user) return;
@@ -175,6 +177,10 @@ export default function TasksPage() {
   const getTasksForDay = (day: Date) => tasks.filter(t => t.due_date && isSameDay(new Date(t.due_date + "T12:00:00"), day));
 
   const openEdit = (task: Task) => { setEditingTask({ ...task }); setEditDialog(true); };
+
+  const openDayDetail = (day: Date) => { setSelectedDay(day); setDayDetailOpen(true); };
+  const selectedDayTasks = selectedDay ? getTasksForDay(selectedDay) : [];
+  const selectedDayHabits = habits; // all habits apply daily
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -284,6 +290,69 @@ export default function TasksPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Day Detail Dialog */}
+      <Dialog open={dayDetailOpen} onOpenChange={setDayDetailOpen}>
+        <DialogContent className="bg-card border-border max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              {selectedDay ? format(selectedDay, "EEEE, dd 'de' MMMM", { locale: ptBR }) : ""}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                <CheckSquare className="h-4 w-4 text-primary" /> Tarefas ({selectedDayTasks.length})
+              </h4>
+              {selectedDayTasks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma tarefa para este dia.</p>
+              ) : (
+                <div className="space-y-2">
+                  {selectedDayTasks.map((task) => (
+                    <div key={task.id} className="p-3 rounded-lg bg-secondary/50 border border-border flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className={cn("text-sm font-medium", task.status === "done" ? "line-through text-muted-foreground" : "text-foreground")}>{task.title}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge className={cn("text-xs", priorityColors[task.priority])}>{task.priority}</Badge>
+                          <span className="text-xs text-muted-foreground">{statusLabels[task.status]}</span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1"><Zap className="h-3 w-3" />{task.xp_reward} XP</span>
+                          {task.estimated_minutes && <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{task.estimated_minutes}m</span>}
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => { setDayDetailOpen(false); openEdit(task); }} className="text-muted-foreground hover:text-primary"><Pencil className="h-4 w-4" /></button>
+                        {task.status !== "done" && (
+                          <button onClick={() => { updateTaskStatus(task.id, "done"); }} className="text-muted-foreground hover:text-primary"><CheckSquare className="h-4 w-4" /></button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                <Flame className="h-4 w-4 text-primary" /> Hábitos ({selectedDayHabits.length})
+              </h4>
+              {selectedDayHabits.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum hábito cadastrado.</p>
+              ) : (
+                <div className="space-y-1">
+                  {selectedDayHabits.map((habit) => (
+                    <div key={habit.id} className="flex items-center gap-3 p-2 rounded-lg bg-secondary/30 border border-border">
+                      <Checkbox checked={completedHabits.has(habit.id)} className="pointer-events-none" />
+                      <span className={cn("text-sm", completedHabits.has(habit.id) ? "line-through text-muted-foreground" : "text-foreground")}>{habit.name}</span>
+                      <Badge variant="outline" className="ml-auto text-xs">{habit.xp_reward} XP</Badge>
+                      {habit.streak > 0 && <span className="text-xs text-muted-foreground">🔥{habit.streak}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Hábitos do dia */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
@@ -357,14 +426,14 @@ export default function TasksPage() {
             <h3 className="font-semibold text-foreground">{format(weekStart, "dd MMM", { locale: ptBR })} — {format(weekEnd, "dd MMM yyyy", { locale: ptBR })}</h3>
             <Button variant="ghost" size="icon" onClick={() => setWeekRef(addWeeks(weekRef, 1))}><ChevronRight className="h-4 w-4" /></Button>
           </div>
-          <div className="grid grid-cols-7 gap-2">
+           <div className="grid grid-cols-7 gap-2">
             {weekDays.map((day) => {
               const dayTasks = getTasksForDay(day);
               return (
-                <div key={day.toISOString()} className={cn("rounded-lg border p-2 min-h-[120px]", isToday(day) ? "border-primary/50 bg-primary/5" : "border-border bg-secondary/30")}>
+                <div key={day.toISOString()} onClick={() => openDayDetail(day)} className={cn("rounded-lg border p-2 min-h-[120px] cursor-pointer hover:border-primary/40 transition-colors", isToday(day) ? "border-primary/50 bg-primary/5" : "border-border bg-secondary/30")}>
                   <p className={cn("text-xs font-semibold mb-1", isToday(day) ? "text-primary" : "text-muted-foreground")}>{format(day, "EEE dd", { locale: ptBR })}</p>
                   {dayTasks.map(t => (
-                    <button key={t.id} onClick={() => openEdit(t)} className="w-full text-left text-xs p-1 rounded bg-primary/10 text-foreground mb-1 truncate hover:bg-primary/20 transition-colors">{t.title}</button>
+                    <div key={t.id} className="w-full text-left text-xs p-1 rounded bg-primary/10 text-foreground mb-1 truncate">{t.title}</div>
                   ))}
                 </div>
               );
@@ -380,16 +449,16 @@ export default function TasksPage() {
             <h3 className="font-semibold text-foreground capitalize">{format(monthRef, "MMMM yyyy", { locale: ptBR })}</h3>
             <Button variant="ghost" size="icon" onClick={() => setMonthRef(addMonths(monthRef, 1))}><ChevronRight className="h-4 w-4" /></Button>
           </div>
-          <div className="grid grid-cols-7 gap-1">
+           <div className="grid grid-cols-7 gap-1">
             {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => <div key={d} className="text-xs text-center text-muted-foreground font-semibold p-1">{d}</div>)}
             {Array.from({ length: (monthStart.getDay() + 6) % 7 }).map((_, i) => <div key={`e-${i}`} />)}
             {monthDays.map((day) => {
               const dayTasks = getTasksForDay(day);
               return (
-                <div key={day.toISOString()} className={cn("rounded-md border p-1 min-h-[60px] text-xs", isToday(day) ? "border-primary/50 bg-primary/5" : "border-border/50")}>
+                <div key={day.toISOString()} onClick={() => openDayDetail(day)} className={cn("rounded-md border p-1 min-h-[60px] text-xs cursor-pointer hover:border-primary/40 transition-colors", isToday(day) ? "border-primary/50 bg-primary/5" : "border-border/50")}>
                   <p className={cn("font-semibold", isToday(day) ? "text-primary" : "text-muted-foreground")}>{format(day, "d")}</p>
                   {dayTasks.slice(0, 2).map(t => (
-                    <button key={t.id} onClick={() => openEdit(t)} className="w-full text-left truncate text-[10px] rounded px-1 bg-primary/10 text-foreground mt-0.5 hover:bg-primary/20">{t.title}</button>
+                    <div key={t.id} className="w-full text-left truncate text-[10px] rounded px-1 bg-primary/10 text-foreground mt-0.5">{t.title}</div>
                   ))}
                   {dayTasks.length > 2 && <span className="text-[10px] text-muted-foreground">+{dayTasks.length - 2}</span>}
                 </div>
