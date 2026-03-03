@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, LineChart, Line, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, LineChart, Line, CartesianGrid, Area, AreaChart } from "recharts";
 
 interface Investment {
   id: string;
@@ -28,6 +27,15 @@ interface InvestmentTransaction {
 const typeLabels: Record<string, string> = { stock: "Ação", fii: "FII", etf: "ETF", fixed_income: "Renda Fixa", crypto: "Cripto", other: "Outro" };
 
 const fmt = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+
+const tooltipStyle = {
+  backgroundColor: "hsl(220 18% 7%)",
+  border: "1px solid hsl(220 14% 14%)",
+  borderRadius: 8,
+  color: "hsl(160 10% 92%)",
+};
+
+const customCursor = { fill: "hsl(153 100% 50% / 0.08)" };
 
 interface Props {
   investment: Investment | null;
@@ -133,16 +141,23 @@ export default function InvestmentDetailSheet({ investment, transactions, open, 
             <h4 className="text-sm font-semibold text-foreground mb-3">Evolução da Posição</h4>
             <div className="h-[180px] rounded-lg border border-border bg-secondary/30 p-2">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={positionData}>
+                <AreaChart data={positionData}>
+                  <defs>
+                    <linearGradient id="posGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(153 100% 50%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(153 100% 50%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(220 10% 50%)" }} />
                   <YAxis tick={{ fontSize: 10, fill: "hsl(220 10% 50%)" }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "hsl(220 18% 7%)", border: "1px solid hsl(220 14% 14%)", borderRadius: 8, color: "hsl(160 10% 92%)" }}
+                    contentStyle={tooltipStyle}
+                    cursor={{ stroke: "hsl(153 100% 50%)", strokeWidth: 1, strokeDasharray: "4 4" }}
                     formatter={(v: number, name: string) => [name === "invested" ? fmt(v) : v, name === "invested" ? "Investido" : "Quantidade"]}
                   />
-                  <Line type="monotone" dataKey="invested" stroke="hsl(153 100% 50%)" strokeWidth={2} dot={false} />
-                </LineChart>
+                  <Area type="monotone" dataKey="invested" stroke="hsl(153 100% 50%)" fill="url(#posGradient)" strokeWidth={2} />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
@@ -157,10 +172,7 @@ export default function InvestmentDetailSheet({ investment, transactions, open, 
                 <BarChart data={monthlyData}>
                   <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(220 10% 50%)" }} />
                   <YAxis tick={{ fontSize: 10, fill: "hsl(220 10% 50%)" }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "hsl(220 18% 7%)", border: "1px solid hsl(220 14% 14%)", borderRadius: 8, color: "hsl(160 10% 92%)" }}
-                    formatter={(v: number) => [fmt(v), "Aporte"]}
-                  />
+                  <Tooltip contentStyle={tooltipStyle} cursor={customCursor} formatter={(v: number) => [fmt(v), "Aporte"]} />
                   <Bar dataKey="value" fill="hsl(153 100% 50%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -176,7 +188,7 @@ export default function InvestmentDetailSheet({ investment, transactions, open, 
             {[...assetTxs].reverse().map(tx => (
               <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
                 <div className="flex items-center gap-2">
-                  {tx.type === "buy" ? <ArrowDownCircle className="h-4 w-4 text-primary" /> : tx.type === "sell" ? <ArrowUpCircle className="h-4 w-4 text-destructive" /> : <TrendingUp className="h-4 w-4 text-yellow-400" />}
+                  {tx.type === "buy" ? <ArrowDownCircle className="h-4 w-4 text-primary" /> : tx.type === "sell" ? <ArrowUpCircle className="h-4 w-4 text-destructive" /> : <TrendingUp className="h-4 w-4 text-accent" />}
                   <div>
                     <Badge variant="outline" className="text-[10px]">{tx.type === "buy" ? "Compra" : tx.type === "sell" ? "Venda" : "Dividendo"}</Badge>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(tx.transaction_date).toLocaleDateString("pt-BR")} · {Number(tx.quantity)} un × {fmt(Number(tx.price))}</p>
