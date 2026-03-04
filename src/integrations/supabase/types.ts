@@ -485,9 +485,11 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          due_date: string | null
           id: string
           is_recurring: boolean
           payment_method: string | null
+          payment_status: string
           transaction_date: string
           type: string
           updated_at: string
@@ -499,9 +501,11 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          due_date?: string | null
           id?: string
           is_recurring?: boolean
           payment_method?: string | null
+          payment_status?: string
           transaction_date?: string
           type: string
           updated_at?: string
@@ -513,9 +517,11 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          due_date?: string | null
           id?: string
           is_recurring?: boolean
           payment_method?: string | null
+          payment_status?: string
           transaction_date?: string
           type?: string
           updated_at?: string

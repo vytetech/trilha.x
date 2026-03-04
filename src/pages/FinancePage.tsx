@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Wallet, Plus, ArrowUpCircle, ArrowDownCircle, Trash2, PieChart, ChevronLeft, ChevronRight,
-  TrendingUp, TrendingDown, Target, CreditCard, DollarSign, Flame, CalendarDays, BarChart3, Activity
+  TrendingUp, TrendingDown, Target, CreditCard, DollarSign, Flame, CalendarDays, BarChart3, Activity,
+  Clock, CheckCircle2, AlertCircle, Edit2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,8 @@ interface Transaction {
   description: string | null;
   transaction_date: string;
   payment_method: string | null;
+  payment_status: string;
+  due_date: string | null;
 }
 
 interface Budget {
@@ -65,7 +68,7 @@ export default function FinancePage() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
-  const [form, setForm] = useState({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "" });
+  const [form, setForm] = useState({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "" });
   const [budgetForm, setBudgetForm] = useState({ category: "Alimentação", limit: "" });
 
   const now = new Date();
@@ -193,8 +196,9 @@ export default function FinancePage() {
     await supabase.from("transactions").insert({
       user_id: user.id, type: form.type, amount: Number(form.amount), category: form.category,
       description: form.description || null, transaction_date: form.date, payment_method: form.payment_method || null,
+      payment_status: form.payment_status, due_date: form.due_date || null,
     });
-    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "" });
+    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "" });
     setDialogOpen(false);
     fetchData();
     toast({ title: "Transação registrada! 💰" });
@@ -250,6 +254,19 @@ export default function FinancePage() {
                 <div className="space-y-2"><Label>Data</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-secondary border-border" /></div>
               </div>
               <div className="space-y-2"><Label>Descrição</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="bg-secondary border-border" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2"><Label>Status Pagamento</Label>
+                  <Select value={form.payment_status} onValueChange={(v) => setForm({ ...form, payment_status: v })}>
+                    <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paid">Pago</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="unpaid">Não Pago</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2"><Label>Vencimento</Label><Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className="bg-secondary border-border" /></div>
+              </div>
               <Button onClick={createTransaction} className="w-full">Registrar</Button>
             </div>
           </DialogContent>
@@ -423,21 +440,54 @@ export default function FinancePage() {
         {/* ========== TRANSAÇÕES ========== */}
         <TabsContent value="transacoes" className="mt-4">
           <div className="space-y-2">
-            {transactions.map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card group hover:border-primary/20 transition-colors">
-                <div className="flex items-center gap-3">
-                  {tx.type === "income" ? <ArrowUpCircle className="h-5 w-5 text-primary" /> : <ArrowDownCircle className="h-5 w-5 text-destructive" />}
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{tx.description || tx.category}</p>
-                    <div className="flex gap-2 mt-0.5"><Badge variant="outline" className="text-xs">{tx.category}</Badge><span className="text-xs text-muted-foreground">{new Date(tx.transaction_date).toLocaleDateString("pt-BR")}</span></div>
+            {transactions.map((tx) => {
+              const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+                paid: { label: "Pago", color: "bg-primary/15 text-primary border-primary/30", icon: <CheckCircle2 className="h-3 w-3" /> },
+                pending: { label: "Pendente", color: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30", icon: <Clock className="h-3 w-3" /> },
+                unpaid: { label: "Não Pago", color: "bg-destructive/15 text-destructive border-destructive/30", icon: <AlertCircle className="h-3 w-3" /> },
+              };
+              const status = statusConfig[tx.payment_status] || statusConfig.paid;
+              const isOverdue = tx.due_date && tx.payment_status !== "paid" && new Date(tx.due_date) < new Date();
+
+              return (
+                <div key={tx.id} className={`flex items-center justify-between p-3 rounded-lg border bg-card group hover:border-primary/20 transition-colors ${isOverdue ? "border-destructive/40" : "border-border"}`}>
+                  <div className="flex items-center gap-3">
+                    {tx.type === "income" ? <ArrowUpCircle className="h-5 w-5 text-primary" /> : <ArrowDownCircle className="h-5 w-5 text-destructive" />}
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{tx.description || tx.category}</p>
+                      <div className="flex flex-wrap gap-2 mt-0.5 items-center">
+                        <Badge variant="outline" className="text-xs">{tx.category}</Badge>
+                        <span className="text-xs text-muted-foreground">{new Date(tx.transaction_date).toLocaleDateString("pt-BR")}</span>
+                        <Badge className={`text-[10px] gap-1 border ${status.color}`}>
+                          {status.icon}{status.label}
+                        </Badge>
+                        {tx.due_date && (
+                          <span className={`text-[10px] flex items-center gap-1 ${isOverdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                            <CalendarDays className="h-3 w-3" />
+                            Venc: {new Date(tx.due_date).toLocaleDateString("pt-BR")}
+                            {isOverdue && " (Atrasado!)"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-bold font-mono text-sm ${tx.type === "income" ? "text-primary" : "text-destructive"}`}>{tx.type === "income" ? "+" : "-"}{fmt(Number(tx.amount))}</span>
+                    {tx.payment_status !== "paid" && (
+                      <button
+                        onClick={async () => {
+                          await supabase.from("transactions").update({ payment_status: "paid" } as any).eq("id", tx.id);
+                          fetchData();
+                          toast({ title: "Marcado como pago! ✅" });
+                        }}
+                        className="text-muted-foreground hover:text-primary transition-colors" title="Marcar como pago"
+                      ><CheckCircle2 className="h-4 w-4" /></button>
+                    )}
+                    <button onClick={() => deleteTransaction(tx.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`font-bold font-mono ${tx.type === "income" ? "text-primary" : "text-destructive"}`}>{tx.type === "income" ? "+" : "-"}{fmt(Number(tx.amount))}</span>
-                  <button onClick={() => deleteTransaction(tx.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"><Trash2 className="h-4 w-4" /></button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {transactions.length === 0 && <div className="text-center py-12 text-muted-foreground"><Wallet className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>Nenhuma transação neste mês.</p></div>}
           </div>
         </TabsContent>
