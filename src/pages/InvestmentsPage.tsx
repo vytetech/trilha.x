@@ -223,6 +223,9 @@ export default function InvestmentsPage() {
     return Object.entries(monthMap).map(([month, v]) => ({ month, ...v }));
   }, [investTxs]);
 
+  const fmt = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+  const getInvestmentName = (id: string | null) => investments.find(i => i.id === id)?.name || "—";
+
   // Dividend by asset
   const dividendByAsset = useMemo(() => {
     const map: Record<string, number> = {};
@@ -249,9 +252,6 @@ export default function InvestmentsPage() {
     for (let i = 0; i < meses; i++) total = (total + aporte) * (1 + taxa);
     return total;
   })();
-
-  const fmt = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-  const getInvestmentName = (id: string) => investments.find(i => i.id === id)?.name || "—";
 
   const periodLabel = period === "month" ? "Este Mês" : period === "year" ? "Este Ano" : "Todo Período";
 
