@@ -1,120 +1,511 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, Zap, Flame, Target, Wallet, TrendingUp } from "lucide-react";
+import {
+  BarChart3, Zap, Flame, Target, Wallet, TrendingUp, TrendingDown,
+  CheckCircle2, Clock, Award, Activity, ArrowUpCircle, ArrowDownCircle,
+  PieChart, Layers, DollarSign, Calendar, Users, Star, Shield
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, LineChart, Line } from "recharts";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  RadarChart, PolarGrid, PolarAngleAxis, Radar,
+  LineChart, Line, CartesianGrid, Area, AreaChart,
+  PieChart as RPieChart, Pie, Cell
+} from "recharts";
+
+const fmt = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+const MONTH_NAMES_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const COLORS = ["hsl(153 100% 50%)", "hsl(200 80% 50%)", "hsl(280 70% 55%)", "hsl(40 90% 55%)", "hsl(0 72% 51%)", "hsl(180 60% 45%)", "hsl(320 70% 50%)", "hsl(120 50% 40%)"];
+
+const tooltipStyle = {
+  backgroundColor: "hsl(220 18% 7%)",
+  border: "1px solid hsl(220 14% 14%)",
+  borderRadius: 8,
+  color: "hsl(160 10% 92%)",
+};
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  sub?: string;
+  subColor?: string;
+  bgIcon?: string;
+}
+
+function StatCard({ icon, label, value, sub, subColor = "text-muted-foreground", bgIcon = "bg-primary/10" }: StatCardProps) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center gap-3 mb-2">
+        <div className={`p-2 rounded-lg ${bgIcon}`}>{icon}</div>
+        <span className="text-xs text-muted-foreground font-medium">{label}</span>
+      </div>
+      <p className="text-xl font-bold text-foreground font-mono">{value}</p>
+      {sub && <p className={`text-xs mt-1 ${subColor}`}>{sub}</p>}
+    </div>
+  );
+}
 
 export default function ReportsPage() {
   const { user } = useAuth();
-  const [tasksDone, setTasksDone] = useState(0);
-  const [habitsCompleted, setHabitsCompleted] = useState(0);
-  const [goalsCompleted, setGoalsCompleted] = useState(0);
-  const [goalsActive, setGoalsActive] = useState(0);
-  const [totalIncome, setTotalIncome] = useState(0);
-  const [totalExpenses, setTotalExpenses] = useState(0);
-  const [totalInvested, setTotalInvested] = useState(0);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [habitLogs, setHabitLogs] = useState<any[]>([]);
+  const [habits, setHabits] = useState<any[]>([]);
+  const [goals, setGoals] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [investments, setInvestments] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
+  const [dreams, setDreams] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
-      const [tasksRes, habitsRes, goalsRes, txRes, invRes, profileRes] = await Promise.all([
-        supabase.from("tasks").select("id", { count: "exact" }).eq("user_id", user.id).eq("status", "done"),
-        supabase.from("habit_logs").select("id", { count: "exact" }).eq("user_id", user.id),
-        supabase.from("goals").select("status").eq("user_id", user.id),
-        supabase.from("transactions").select("type, amount").eq("user_id", user.id),
-        supabase.from("investments").select("quantity, current_price").eq("user_id", user.id),
+      const [tasksRes, habitLogsRes, habitsRes, goalsRes, txRes, invRes, profileRes, dreamsRes] = await Promise.all([
+        supabase.from("tasks").select("*").eq("user_id", user.id),
+        supabase.from("habit_logs").select("*").eq("user_id", user.id),
+        supabase.from("habits").select("*").eq("user_id", user.id),
+        supabase.from("goals").select("*").eq("user_id", user.id),
+        supabase.from("transactions").select("*").eq("user_id", user.id),
+        supabase.from("investments").select("*").eq("user_id", user.id),
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+        supabase.from("dreams").select("*").eq("user_id", user.id),
       ]);
-      setTasksDone(tasksRes.count || 0);
-      setHabitsCompleted(habitsRes.count || 0);
-      if (goalsRes.data) {
-        setGoalsCompleted(goalsRes.data.filter((g) => g.status === "completed").length);
-        setGoalsActive(goalsRes.data.filter((g) => g.status === "active").length);
-      }
-      if (txRes.data) {
-        setTotalIncome(txRes.data.filter((t) => t.type === "income").reduce((a, t) => a + Number(t.amount), 0));
-        setTotalExpenses(txRes.data.filter((t) => t.type === "expense").reduce((a, t) => a + Number(t.amount), 0));
-      }
-      if (invRes.data) setTotalInvested(invRes.data.reduce((a, i) => a + Number(i.quantity) * Number(i.current_price), 0));
+      if (tasksRes.data) setTasks(tasksRes.data);
+      if (habitLogsRes.data) setHabitLogs(habitLogsRes.data);
+      if (habitsRes.data) setHabits(habitsRes.data);
+      if (goalsRes.data) setGoals(goalsRes.data);
+      if (txRes.data) setTransactions(txRes.data);
+      if (invRes.data) setInvestments(invRes.data);
       if (profileRes.data) setProfile(profileRes.data);
+      if (dreamsRes.data) setDreams(dreamsRes.data);
     };
     fetchAll();
   }, [user]);
 
+  // === Computed metrics ===
+  const tasksDone = tasks.filter(t => t.status === "done").length;
+  const tasksTodo = tasks.filter(t => t.status === "todo").length;
+  const tasksInProgress = tasks.filter(t => t.status === "in_progress").length;
+  const taskCompletionRate = tasks.length > 0 ? Math.round((tasksDone / tasks.length) * 100) : 0;
+
+  const totalHabitLogs = habitLogs.length;
+  const activeHabits = habits.filter(h => h.is_active).length;
+  const bestStreak = habits.reduce((max, h) => Math.max(max, h.best_streak || 0), 0);
+  const avgStreak = habits.length > 0 ? Math.round(habits.reduce((a, h) => a + (h.streak || 0), 0) / habits.length) : 0;
+
+  const goalsActive = goals.filter(g => g.status === "active").length;
+  const goalsCompleted = goals.filter(g => g.status === "completed").length;
+  const goalsSuccessRate = goals.length > 0 ? Math.round((goalsCompleted / goals.length) * 100) : 0;
+
+  const incomeTxs = transactions.filter(t => t.type === "income" && !t.credit_card_id);
+  const expenseTxs = transactions.filter(t => t.type === "expense" && !t.credit_card_id);
+  const totalIncome = incomeTxs.reduce((a, t) => a + Number(t.amount), 0);
+  const totalExpenses = expenseTxs.reduce((a, t) => a + Number(t.amount), 0);
+  const balance = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
+  const totalInvested = investments.reduce((a, i) => a + Number(i.quantity) * Number(i.current_price), 0);
+  const totalDividends = investments.reduce((a, i) => a + Number(i.dividends_total || 0), 0);
+
+  const dreamsActive = dreams.filter(d => d.status === "active").length;
+  const dreamsCompleted = dreams.filter(d => d.status === "completed").length;
+  const totalDreamsSaved = dreams.reduce((a, d) => a + Number(d.current_amount), 0);
+
+  // === Monthly data for charts ===
+  const currentYear = new Date().getFullYear();
+
+  const monthlyFinance = useMemo(() => {
+    return MONTH_NAMES_SHORT.map((m, i) => {
+      const monthTxs = transactions.filter(t => {
+        const d = new Date(t.transaction_date);
+        return d.getFullYear() === currentYear && d.getMonth() === i && !t.credit_card_id;
+      });
+      const income = monthTxs.filter(t => t.type === "income").reduce((a, t) => a + Number(t.amount), 0);
+      const expense = monthTxs.filter(t => t.type === "expense").reduce((a, t) => a + Number(t.amount), 0);
+      return { name: m, receita: income, despesa: expense, saldo: income - expense };
+    });
+  }, [transactions, currentYear]);
+
+  const monthlyTasks = useMemo(() => {
+    return MONTH_NAMES_SHORT.map((m, i) => {
+      const count = tasks.filter(t => {
+        if (t.status !== "done") return false;
+        const d = new Date(t.updated_at);
+        return d.getFullYear() === currentYear && d.getMonth() === i;
+      }).length;
+      return { name: m, concluidas: count };
+    });
+  }, [tasks, currentYear]);
+
+  const monthlyHabits = useMemo(() => {
+    return MONTH_NAMES_SHORT.map((m, i) => {
+      const count = habitLogs.filter(l => {
+        const d = new Date(l.completed_at);
+        return d.getFullYear() === currentYear && d.getMonth() === i;
+      }).length;
+      return { name: m, completados: count };
+    });
+  }, [habitLogs, currentYear]);
+
+  const categorySpending = useMemo(() => {
+    const cats: Record<string, number> = {};
+    expenseTxs.forEach(t => { cats[t.category] = (cats[t.category] || 0) + Number(t.amount); });
+    return Object.entries(cats).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [expenseTxs]);
+
   const radarData = [
     { attr: "Foco", value: Math.min(tasksDone * 5, 100) },
-    { attr: "Disciplina", value: Math.min(habitsCompleted * 2, 100) },
-    { attr: "Mental", value: Math.min((goalsCompleted + goalsActive) * 10, 100) },
-    { attr: "Financeiro", value: totalIncome > 0 ? Math.min(Math.round(((totalIncome - totalExpenses) / totalIncome) * 100), 100) : 0 },
-    { attr: "Produtividade", value: Math.min((tasksDone + habitsCompleted) * 3, 100) },
-    { attr: "Consistência", value: Math.min(habitsCompleted, 100) },
+    { attr: "Disciplina", value: Math.min(totalHabitLogs * 2, 100) },
+    { attr: "Ambição", value: Math.min((goalsCompleted + goalsActive) * 10, 100) },
+    { attr: "Financeiro", value: Math.min(Math.max(savingsRate, 0), 100) },
+    { attr: "Produtividade", value: Math.min((tasksDone + totalHabitLogs) * 3, 100) },
+    { attr: "Consistência", value: Math.min(avgStreak * 10, 100) },
   ];
 
-  const fmt = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+  const xpForNextLevel = (profile?.level || 1) * 100;
+  const xpProgress = profile ? Math.round((profile.xp % xpForNextLevel) / xpForNextLevel * 100) : 0;
 
   return (
     <div className="space-y-6 max-w-6xl">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><BarChart3 className="h-6 w-6 text-primary" /> Relatórios</h1>
-        <p className="text-sm text-muted-foreground mt-1">Análise completa da sua evolução</p>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 text-primary" /> Relatórios
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">Análise completa da sua evolução em {currentYear}</p>
       </motion.div>
 
       <Tabs defaultValue="geral">
         <TabsList className="bg-secondary border border-border">
-          <TabsTrigger value="geral">Geral</TabsTrigger>
+          <TabsTrigger value="geral">Visão Geral</TabsTrigger>
           <TabsTrigger value="produtividade">Produtividade</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-          <TabsTrigger value="metas">Metas</TabsTrigger>
+          <TabsTrigger value="metas">Metas & Sonhos</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="geral" className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><p className="text-2xl font-bold neon-text">{profile?.level || 1}</p><p className="text-xs text-muted-foreground">Nível</p></div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><p className="text-2xl font-bold text-foreground">{profile?.xp || 0}</p><p className="text-xs text-muted-foreground">XP Total</p></div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><p className="text-2xl font-bold text-foreground">{tasksDone}</p><p className="text-xs text-muted-foreground">Tarefas feitas</p></div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><p className="text-2xl font-bold text-foreground">{habitsCompleted}</p><p className="text-xs text-muted-foreground">Hábitos concluídos</p></div>
-          </div>
+        {/* ========== VISÃO GERAL ========== */}
+        <TabsContent value="geral" className="mt-4 space-y-6">
+          {/* Level & XP */}
           <div className="rounded-xl border border-border bg-card p-5">
-            <h3 className="font-semibold text-foreground mb-4">Radar de Atributos</h3>
-            <div className="h-[300px]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-primary/10">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Nível atual</p>
+                  <p className="text-3xl font-bold text-foreground">{profile?.level || 1}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">XP Total</p>
+                <p className="text-2xl font-bold font-mono text-primary">{profile?.xp || 0}</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Progresso para nível {(profile?.level || 1) + 1}</span>
+                <span>{xpProgress}%</span>
+              </div>
+              <Progress value={xpProgress} className="h-2" />
+            </div>
+          </div>
+
+          {/* Quick stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard icon={<CheckCircle2 className="h-4 w-4 text-primary" />} label="Tarefas Concluídas" value={tasksDone} sub={`${taskCompletionRate}% de conclusão`} />
+            <StatCard icon={<Flame className="h-4 w-4 text-primary" />} label="Hábitos Completados" value={totalHabitLogs} sub={`Melhor streak: ${bestStreak} dias`} />
+            <StatCard icon={<Target className="h-4 w-4 text-primary" />} label="Metas Alcançadas" value={goalsCompleted} sub={`${goalsSuccessRate}% de sucesso`} />
+            <StatCard icon={<DollarSign className="h-4 w-4 text-primary" />} label="Saldo Acumulado" value={fmt(balance)} sub={`${savingsRate}% taxa de economia`} subColor={balance >= 0 ? "text-primary" : "text-destructive"} />
+          </div>
+
+          {/* Radar */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-foreground">Radar de Performance</h3>
+            </div>
+            <div className="h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="hsl(220,14%,14%)" />
-                  <PolarAngleAxis dataKey="attr" tick={{ fill: "hsl(220,10%,50%)", fontSize: 12 }} />
-                  <Radar dataKey="value" stroke="hsl(153,100%,50%)" fill="hsl(153,100%,50%)" fillOpacity={0.2} />
+                <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
+                  <PolarGrid stroke="hsl(220 14% 14%)" />
+                  <PolarAngleAxis dataKey="attr" tick={{ fill: "hsl(220 10% 55%)", fontSize: 12 }} />
+                  <Radar dataKey="value" stroke="hsl(153 100% 50%)" fill="hsl(153 100% 50%)" fillOpacity={0.15} strokeWidth={2} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="produtividade" className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><Flame className="h-6 w-6 text-primary mx-auto mb-2" /><p className="text-2xl font-bold text-foreground">{tasksDone}</p><p className="text-xs text-muted-foreground">Tarefas concluídas</p></div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><Zap className="h-6 w-6 text-primary mx-auto mb-2" /><p className="text-2xl font-bold text-foreground">{habitsCompleted}</p><p className="text-xs text-muted-foreground">Hábitos completados</p></div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><Target className="h-6 w-6 text-primary mx-auto mb-2" /><p className="text-2xl font-bold text-foreground">{goalsCompleted}</p><p className="text-xs text-muted-foreground">Metas alcançadas</p></div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="financeiro" className="mt-4 space-y-4">
+        {/* ========== PRODUTIVIDADE ========== */}
+        <TabsContent value="produtividade" className="mt-4 space-y-6">
+          {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground mb-1">Receita total</p><p className="text-lg font-bold text-primary font-mono">{fmt(totalIncome)}</p></div>
-            <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground mb-1">Despesas totais</p><p className="text-lg font-bold text-destructive font-mono">{fmt(totalExpenses)}</p></div>
-            <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground mb-1">Saldo</p><p className={`text-lg font-bold font-mono ${totalIncome - totalExpenses >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(totalIncome - totalExpenses)}</p></div>
-            <div className="rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground mb-1">Patrimônio investido</p><p className="text-lg font-bold neon-text font-mono">{fmt(totalInvested)}</p></div>
+            <StatCard icon={<CheckCircle2 className="h-4 w-4 text-primary" />} label="Concluídas" value={tasksDone} bgIcon="bg-primary/10" />
+            <StatCard icon={<Clock className="h-4 w-4 text-yellow-400" />} label="Em Andamento" value={tasksInProgress} bgIcon="bg-yellow-500/10" />
+            <StatCard icon={<Layers className="h-4 w-4 text-muted-foreground" />} label="Pendentes" value={tasksTodo} bgIcon="bg-muted" />
+            <StatCard icon={<TrendingUp className="h-4 w-4 text-primary" />} label="Taxa de Conclusão" value={`${taskCompletionRate}%`} bgIcon="bg-primary/10" />
+          </div>
+
+          {/* Tasks chart */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-foreground">Tarefas Concluídas por Mês</h3>
+            </div>
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyTasks}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 12%)" />
+                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(220 10% 55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="concluidas" fill="hsl(153 100% 50%)" radius={[4, 4, 0, 0]} name="Concluídas" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Habits section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Flame className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Resumo de Hábitos</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { label: "Hábitos Ativos", value: activeHabits },
+                  { label: "Total de Check-ins", value: totalHabitLogs },
+                  { label: "Streak Médio", value: `${avgStreak} dias` },
+                  { label: "Melhor Streak", value: `${bestStreak} dias` },
+                ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                    <span className="text-sm text-muted-foreground">{item.label}</span>
+                    <span className="font-bold font-mono text-foreground">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Check-ins por Mês</h3>
+              </div>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyHabits}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 12%)" />
+                    <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "hsl(220 10% 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Area type="monotone" dataKey="completados" stroke="hsl(153 100% 50%)" fill="hsl(153 100% 50%)" fillOpacity={0.1} strokeWidth={2} name="Check-ins" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="metas" className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><p className="text-2xl font-bold text-foreground">{goalsActive}</p><p className="text-xs text-muted-foreground">Metas ativas</p></div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><p className="text-2xl font-bold neon-text">{goalsCompleted}</p><p className="text-xs text-muted-foreground">Metas concluídas</p></div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center"><p className="text-2xl font-bold text-foreground">{goalsActive + goalsCompleted > 0 ? Math.round((goalsCompleted / (goalsActive + goalsCompleted)) * 100) : 0}%</p><p className="text-xs text-muted-foreground">Taxa de sucesso</p></div>
+        {/* ========== FINANCEIRO ========== */}
+        <TabsContent value="financeiro" className="mt-4 space-y-6">
+          {/* KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard icon={<ArrowUpCircle className="h-4 w-4 text-primary" />} label="Receita Total" value={fmt(totalIncome)} bgIcon="bg-primary/10" />
+            <StatCard icon={<ArrowDownCircle className="h-4 w-4 text-destructive" />} label="Despesas Totais" value={fmt(totalExpenses)} bgIcon="bg-destructive/10" />
+            <StatCard icon={<DollarSign className="h-4 w-4 text-accent-foreground" />} label="Saldo" value={fmt(balance)} subColor={balance >= 0 ? "text-primary" : "text-destructive"} />
+            <StatCard icon={<TrendingUp className="h-4 w-4 text-primary" />} label="Patrimônio Investido" value={fmt(totalInvested)} sub={totalDividends > 0 ? `${fmt(totalDividends)} em dividendos` : undefined} bgIcon="bg-primary/10" />
           </div>
+
+          {/* Finance chart */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-foreground">Receita vs Despesa Mensal</h3>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyFinance} barGap={4}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 12%)" />
+                  <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 55%)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "hsl(220 10% 55%)", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+                  <Bar dataKey="receita" fill="hsl(153 100% 50%)" radius={[4, 4, 0, 0]} name="Receita" />
+                  <Bar dataKey="despesa" fill="hsl(0 72% 51%)" radius={[4, 4, 0, 0]} name="Despesa" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Saldo evolution */}
+            <div className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Evolução do Saldo</h3>
+              </div>
+              <div className="h-[240px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyFinance}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 12%)" />
+                    <XAxis dataKey="name" tick={{ fill: "hsl(220 10% 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "hsl(220 10% 55%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+                    <Area type="monotone" dataKey="saldo" stroke="hsl(153 100% 50%)" fill="hsl(153 100% 50%)" fillOpacity={0.1} strokeWidth={2} name="Saldo" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Category spending */}
+            <div className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <PieChart className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Gastos por Categoria</h3>
+              </div>
+              {categorySpending.length > 0 ? (
+                <div className="space-y-3">
+                  {categorySpending.slice(0, 6).map((cat, i) => {
+                    const maxVal = categorySpending[0]?.value || 1;
+                    const pct = Math.round((cat.value / maxVal) * 100);
+                    return (
+                      <div key={cat.name} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">{cat.name}</span>
+                          <span className="font-mono text-foreground">{fmt(cat.value)}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length] }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">Sem dados de gastos</p>
+              )}
+            </div>
+          </div>
+
+          {/* Financial health indicators */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-foreground">Indicadores de Saúde Financeira</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { label: "Taxa de Economia", value: savingsRate, suffix: "%", status: savingsRate >= 20 ? "good" : savingsRate >= 10 ? "warning" : "bad", desc: savingsRate >= 20 ? "Excelente" : savingsRate >= 10 ? "Razoável" : "Precisa melhorar" },
+                { label: "Transações Registradas", value: transactions.filter(t => !t.credit_card_id).length, suffix: "", status: "neutral", desc: `${incomeTxs.length} receitas, ${expenseTxs.length} despesas` },
+                { label: "Ativos na Carteira", value: investments.length, suffix: "", status: "neutral", desc: totalInvested > 0 ? `Patrimônio: ${fmt(totalInvested)}` : "Nenhum investimento" },
+              ].map((ind, i) => (
+                <div key={i} className="p-4 rounded-lg bg-secondary/50 space-y-2">
+                  <p className="text-xs text-muted-foreground">{ind.label}</p>
+                  <p className={`text-2xl font-bold font-mono ${ind.status === "good" ? "text-primary" : ind.status === "warning" ? "text-yellow-400" : ind.status === "bad" ? "text-destructive" : "text-foreground"}`}>
+                    {ind.value}{ind.suffix}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{ind.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ========== METAS & SONHOS ========== */}
+        <TabsContent value="metas" className="mt-4 space-y-6">
+          {/* Goals KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard icon={<Target className="h-4 w-4 text-primary" />} label="Metas Ativas" value={goalsActive} bgIcon="bg-primary/10" />
+            <StatCard icon={<CheckCircle2 className="h-4 w-4 text-primary" />} label="Metas Concluídas" value={goalsCompleted} bgIcon="bg-primary/10" />
+            <StatCard icon={<Award className="h-4 w-4 text-yellow-400" />} label="Taxa de Sucesso" value={`${goalsSuccessRate}%`} bgIcon="bg-yellow-500/10" />
+            <StatCard icon={<Star className="h-4 w-4 text-primary" />} label="Sonhos Realizados" value={`${dreamsCompleted}/${dreams.length}`} bgIcon="bg-primary/10" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Goals breakdown */}
+            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Detalhamento de Metas</h3>
+              </div>
+              {goals.length > 0 ? (
+                <div className="space-y-3">
+                  {goals.slice(0, 8).map((goal) => {
+                    const pct = goal.target_value ? Math.round((Number(goal.current_value) / Number(goal.target_value)) * 100) : 0;
+                    const isCompleted = goal.status === "completed";
+                    return (
+                      <div key={goal.id} className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-sm text-foreground truncate">{goal.name}</span>
+                            {isCompleted && <Badge className="bg-primary/20 text-primary border-none text-xs shrink-0">✓</Badge>}
+                          </div>
+                          <span className={`text-xs font-mono font-bold shrink-0 ${isCompleted ? "text-primary" : "text-muted-foreground"}`}>{pct}%</span>
+                        </div>
+                        <Progress value={Math.min(pct, 100)} className={`h-1.5 ${isCompleted ? "[&>div]:bg-primary" : ""}`} />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma meta registrada</p>
+              )}
+            </div>
+
+            {/* Dreams breakdown */}
+            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Progresso dos Sonhos</h3>
+              </div>
+              {dreams.length > 0 ? (
+                <div className="space-y-3">
+                  {dreams.slice(0, 8).map((dream) => {
+                    const pct = dream.target_amount ? Math.round((Number(dream.current_amount) / Number(dream.target_amount)) * 100) : 0;
+                    const isCompleted = dream.status === "completed";
+                    return (
+                      <div key={dream.id} className="space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-sm text-foreground truncate">{dream.title}</span>
+                            {isCompleted && <Badge className="bg-primary/20 text-primary border-none text-xs shrink-0">✨</Badge>}
+                          </div>
+                          <span className={`text-xs font-mono font-bold shrink-0 ${isCompleted ? "text-primary" : "text-muted-foreground"}`}>
+                            {dream.target_amount ? `${pct}%` : "—"}
+                          </span>
+                        </div>
+                        {dream.target_amount && <Progress value={Math.min(pct, 100)} className={`h-1.5 ${isCompleted ? "[&>div]:bg-primary" : ""}`} />}
+                        {dream.target_amount && (
+                          <p className="text-xs text-muted-foreground font-mono">{fmt(Number(dream.current_amount))} / {fmt(Number(dream.target_amount))}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum sonho registrado</p>
+              )}
+            </div>
+          </div>
+
+          {/* Total saved for dreams */}
+          {dreams.length > 0 && (
+            <div className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10"><Wallet className="h-5 w-5 text-primary" /></div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Guardado para Sonhos</p>
+                    <p className="text-2xl font-bold font-mono text-foreground">{fmt(totalDreamsSaved)}</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-xs">{dreamsActive} ativos • {dreamsCompleted} realizados</Badge>
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
