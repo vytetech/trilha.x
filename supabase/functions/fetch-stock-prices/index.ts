@@ -24,27 +24,28 @@ serve(async (req) => {
       });
     }
 
-    const tickerStr = tickers.join(',');
-    console.log('Fetching tickers:', tickerStr);
-    console.log('Token length:', BRAPI_API_TOKEN.length);
-    const response = await fetch(`https://brapi.dev/api/quote/${tickerStr}?token=${BRAPI_API_TOKEN}`);
-    const data = await response.json();
-    console.log('brapi response status:', response.status, 'body:', JSON.stringify(data));
-
-    if (!response.ok) {
-      throw new Error(`brapi API error: ${response.status} - ${JSON.stringify(data)}`);
-    }
-
     const prices: Record<string, { price: number; change: number; marketCap?: number; updatedAt: string }> = {};
-    
-    if (data.results) {
-      for (const result of data.results) {
-        prices[result.symbol] = {
-          price: result.regularMarketPrice || 0,
-          change: result.regularMarketChangePercent || 0,
-          marketCap: result.marketCap,
-          updatedAt: result.regularMarketTime || new Date().toISOString(),
-        };
+
+    // Free plan only allows 1 ticker per request, so fetch individually
+    for (const ticker of tickers) {
+      try {
+        const response = await fetch(`https://brapi.dev/api/quote/${ticker}?token=${BRAPI_API_TOKEN}`);
+        const data = await response.json();
+
+        if (response.ok && data.results) {
+          for (const result of data.results) {
+            prices[result.symbol] = {
+              price: result.regularMarketPrice || 0,
+              change: result.regularMarketChangePercent || 0,
+              marketCap: result.marketCap,
+              updatedAt: result.regularMarketTime || new Date().toISOString(),
+            };
+          }
+        } else {
+          console.warn(`Failed to fetch ${ticker}:`, data.message || response.status);
+        }
+      } catch (e) {
+        console.warn(`Error fetching ${ticker}:`, e.message);
       }
     }
 
