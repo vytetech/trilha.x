@@ -21,9 +21,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { user, session, signOut } = useAuth();
+  const { plan, subscribed, subscriptionEnd, loading: subLoading, checkSubscription } = useSubscription();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "perfil";
 
   const [fullName, setFullName] = useState("");
   const [currency, setCurrency] = useState("BRL");
