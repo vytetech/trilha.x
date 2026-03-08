@@ -25,11 +25,14 @@ serve(async (req) => {
     }
 
     const tickerStr = tickers.join(',');
+    console.log('Fetching tickers:', tickerStr);
+    console.log('Token length:', BRAPI_API_TOKEN.length);
     const response = await fetch(`https://brapi.dev/api/quote/${tickerStr}?token=${BRAPI_API_TOKEN}`);
     const data = await response.json();
+    console.log('brapi response status:', response.status, 'body:', JSON.stringify(data));
 
     if (!response.ok) {
-      throw new Error(`brapi API error: ${response.status}`);
+      throw new Error(`brapi API error: ${response.status} - ${JSON.stringify(data)}`);
     }
 
     const prices: Record<string, { price: number; change: number; marketCap?: number; updatedAt: string }> = {};
