@@ -1073,22 +1073,88 @@ export default function FinancePage() {
               </DialogContent>
             </Dialog>
           </div>
-          {budgets.map((b) => {
-            const spent = expenseTxs.filter((t) => t.category === b.category).reduce((a, t) => a + Number(t.amount), 0);
-            const pct = Math.round((spent / Number(b.monthly_limit)) * 100);
-            const color = pct >= 100 ? "text-destructive" : pct >= 80 ? "text-yellow-400" : "text-primary";
-            return (
-              <div key={b.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-sm text-foreground">{b.category}</span>
-                  <span className={`font-bold font-mono text-sm ${color}`}>{pct}%</span>
-                </div>
-                <Progress value={Math.min(pct, 100)} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">{fmt(spent)} de {fmt(Number(b.monthly_limit))}</p>
+          {budgets.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Target className="h-14 w-14 mx-auto mb-4 opacity-20" />
+              <p className="text-lg font-medium mb-1">Nenhum orçamento definido</p>
+              <p className="text-sm opacity-70">Crie orçamentos por categoria para controlar seus gastos.</p>
+            </div>
+          ) : (
+            <>
+              {/* Budget summary header */}
+              {(() => {
+                const totalLimit = budgets.reduce((a, b) => a + Number(b.monthly_limit), 0);
+                const totalSpent = budgets.reduce((a, b) => {
+                  const spent = expenseTxs.filter((t) => t.category === b.category).reduce((s, t) => s + Number(t.amount), 0);
+                  return a + spent;
+                }, 0);
+                const totalPct = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0;
+                const overBudgetCount = budgets.filter(b => {
+                  const spent = expenseTxs.filter((t) => t.category === b.category).reduce((s, t) => s + Number(t.amount), 0);
+                  return spent > Number(b.monthly_limit);
+                }).length;
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                    <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10"><Scale className="h-5 w-5 text-primary" /></div>
+                      <div><p className="text-xs text-muted-foreground">Orçamento Total</p><p className="font-bold text-foreground font-mono">{fmt(totalLimit)}</p></div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${totalPct >= 100 ? "bg-destructive/10" : totalPct >= 80 ? "bg-yellow-500/10" : "bg-primary/10"}`}>
+                        <Activity className={`h-5 w-5 ${totalPct >= 100 ? "text-destructive" : totalPct >= 80 ? "text-yellow-400" : "text-primary"}`} />
+                      </div>
+                      <div><p className="text-xs text-muted-foreground">Utilizado</p><p className="font-bold text-foreground font-mono">{fmt(totalSpent)} <span className="text-xs text-muted-foreground">({totalPct}%)</span></p></div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${overBudgetCount > 0 ? "bg-destructive/10" : "bg-primary/10"}`}>
+                        <AlertCircle className={`h-5 w-5 ${overBudgetCount > 0 ? "text-destructive" : "text-primary"}`} />
+                      </div>
+                      <div><p className="text-xs text-muted-foreground">Estourados</p><p className="font-bold text-foreground font-mono">{overBudgetCount} <span className="text-xs text-muted-foreground">de {budgets.length}</span></p></div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {budgets.map((b) => {
+                  const spent = expenseTxs.filter((t) => t.category === b.category).reduce((a, t) => a + Number(t.amount), 0);
+                  const limit = Number(b.monthly_limit);
+                  const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+                  const remaining = limit - spent;
+                  const status = pct >= 100 ? "destructive" : pct >= 80 ? "warning" : "ok";
+                  const statusColor = status === "destructive" ? "text-destructive" : status === "warning" ? "text-yellow-400" : "text-primary";
+                  const statusBg = status === "destructive" ? "bg-destructive/10" : status === "warning" ? "bg-yellow-500/10" : "bg-primary/10";
+                  const statusIcon = status === "destructive" ? <AlertCircle className="h-4 w-4" /> : status === "warning" ? <FileWarning className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />;
+                  const statusLabel = status === "destructive" ? "Estourado" : status === "warning" ? "Atenção" : "Dentro";
+
+                  return (
+                    <div key={b.id} className="rounded-xl border border-border bg-card p-5 space-y-3 hover:border-primary/30 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground">{b.category}</span>
+                          <Badge variant="outline" className={`text-xs ${statusColor} ${statusBg} border-none`}>
+                            <span className="flex items-center gap-1">{statusIcon} {statusLabel}</span>
+                          </Badge>
+                        </div>
+                        <span className={`font-bold font-mono text-lg ${statusColor}`}>{pct}%</span>
+                      </div>
+                      <Progress value={Math.min(pct, 100)} className={`h-2.5 ${status === "destructive" ? "[&>div]:bg-destructive" : status === "warning" ? "[&>div]:bg-yellow-400" : ""}`} />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Gasto: <span className="font-mono text-foreground">{fmt(spent)}</span></span>
+                        <span>Limite: <span className="font-mono text-foreground">{fmt(limit)}</span></span>
+                      </div>
+                      <div className={`text-xs font-medium ${remaining >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {remaining >= 0 ? `Ainda disponível: ${fmt(remaining)}` : `Excedido em: ${fmt(Math.abs(remaining))}`}
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 p-0 h-auto" onClick={() => deleteBudget(b.id)}>
+                        <Trash2 className="h-3 w-3 mr-1" /> Remover
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-          {budgets.length === 0 && <div className="text-center py-12 text-muted-foreground"><Target className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>Nenhum orçamento definido.</p></div>}
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>
