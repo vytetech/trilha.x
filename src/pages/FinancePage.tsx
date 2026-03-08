@@ -187,13 +187,13 @@ export default function FinancePage() {
       if (m <= 0) { m += 12; y -= 1; }
       const key = `${y}-${String(m).padStart(2, "0")}`;
       const label = `${MONTH_NAMES[m - 1].slice(0, 3)}/${String(y).slice(2)}`;
-      const monthTxs = allTransactions.filter(tx => tx.transaction_date.startsWith(key));
+      const monthTxs = allRegularTransactions.filter(tx => tx.transaction_date.startsWith(key));
       const inc = monthTxs.filter(t => t.type === "income").reduce((a, t) => a + Number(t.amount), 0);
       const exp = monthTxs.filter(t => t.type === "expense").reduce((a, t) => a + Number(t.amount), 0);
       months.push({ month: label, income: inc, expense: exp, balance: inc - exp });
     }
     return months;
-  }, [allTransactions, viewMonth, viewYear]);
+  }, [allRegularTransactions, viewMonth, viewYear]);
 
   const accumulatedBalance = useMemo(() => {
     let cum = 0;
