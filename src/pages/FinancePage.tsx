@@ -640,8 +640,8 @@ export default function FinancePage() {
                   className={`relative rounded-2xl p-5 bg-gradient-to-br ${gradientClass} text-white shadow-lg cursor-pointer overflow-hidden`}
                   onClick={() => setSelectedCardId(selectedCardId === card.id ? null : card.id)}
                 >
-                  {/* Card chip decoration */}
-                  <div className="absolute top-4 right-4 w-10 h-7 rounded bg-white/20 backdrop-blur-sm" />
+                   {/* Card chip decoration */}
+                   <div className="absolute top-4 right-16 w-10 h-7 rounded bg-white/20" />
                   <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
 
                   <div className="flex items-center justify-between mb-6">
