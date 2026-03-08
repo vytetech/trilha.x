@@ -75,7 +75,19 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const sub = subscriptions.data[0];
-      subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+      logStep("Subscription details", { 
+        status: sub.status, 
+        current_period_end: sub.current_period_end,
+        trial_end: sub.trial_end 
+      });
+      try {
+        const endTimestamp = sub.current_period_end || sub.trial_end;
+        if (endTimestamp && typeof endTimestamp === "number") {
+          subscriptionEnd = new Date(endTimestamp * 1000).toISOString();
+        }
+      } catch (dateErr) {
+        logStep("Date parsing error, skipping end date", { error: String(dateErr) });
+      }
       logStep("Active subscription found", { endDate: subscriptionEnd });
       // Update profile plan to pro
       await supabaseClient.from("profiles").update({ plan: "pro" }).eq("user_id", user.id);
