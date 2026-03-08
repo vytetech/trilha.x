@@ -695,8 +695,9 @@ export default function FinancePage() {
           {selectedCardId && (() => {
             const card = creditCards.find(c => c.id === selectedCardId);
             if (!card) return null;
-            const cardTxs = transactions.filter(tx => tx.credit_card_id === selectedCardId);
+            const cardTxs = getCardInvoiceTxs(card);
             const invoiceTotal = cardTxs.reduce((a, t) => a + Number(t.amount), 0);
+            const dueDate = new Date(viewYear, viewMonth - 1, card.due_day);
 
             return (
               <motion.div
@@ -705,15 +706,20 @@ export default function FinancePage() {
                 className="rounded-xl border border-border bg-card p-5 space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-primary" />
-                    Fatura {card.name} — {MONTH_NAMES[viewMonth - 1]}
-                  </h4>
+                  <div>
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                      Fatura {card.name} — {MONTH_NAMES[viewMonth - 1]}
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Fecha dia {card.closing_day} · Vence dia {card.due_day} ({dueDate.toLocaleDateString("pt-BR")})
+                    </p>
+                  </div>
                   <span className="font-bold font-mono text-destructive text-lg">{fmt(invoiceTotal)}</span>
                 </div>
 
                 {cardTxs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">Nenhuma compra neste cartão neste mês.</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">Nenhuma compra neste período de fatura.</p>
                 ) : (
                   <div className="space-y-2">
                     {cardTxs.map(tx => (
