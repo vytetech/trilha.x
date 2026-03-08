@@ -302,6 +302,7 @@ export type Database = {
           attribute: string | null
           best_streak: number
           created_at: string
+          custom_days: string[] | null
           description: string | null
           frequency: string
           id: string
@@ -316,6 +317,7 @@ export type Database = {
           attribute?: string | null
           best_streak?: number
           created_at?: string
+          custom_days?: string[] | null
           description?: string | null
           frequency?: string
           id?: string
@@ -330,6 +332,7 @@ export type Database = {
           attribute?: string | null
           best_streak?: number
           created_at?: string
+          custom_days?: string[] | null
           description?: string | null
           frequency?: string
           id?: string

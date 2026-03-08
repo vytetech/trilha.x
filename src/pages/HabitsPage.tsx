@@ -28,7 +28,18 @@ interface Habit {
   best_streak: number;
   is_active: boolean;
   created_at: string;
+  custom_days: string[] | null;
 }
+
+const weekDayOptions = [
+  { key: "dom", label: "D", full: "Domingo" },
+  { key: "seg", label: "S", full: "Segunda" },
+  { key: "ter", label: "T", full: "Terça" },
+  { key: "qua", label: "Q", full: "Quarta" },
+  { key: "qui", label: "Q", full: "Quinta" },
+  { key: "sex", label: "S", full: "Sexta" },
+  { key: "sab", label: "S", full: "Sábado" },
+];
 
 const attrConfig: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
   focus: { label: "Foco", emoji: "🎯", color: "text-blue-400", bg: "bg-blue-400/10" },
@@ -58,6 +69,7 @@ export default function HabitsPage() {
   const [attribute, setAttribute] = useState("productivity");
   const [frequency, setFrequency] = useState("daily");
   const [xp, setXp] = useState("5");
+  const [customDays, setCustomDays] = useState<string[]>(["seg", "ter", "qua", "qui", "sex"]);
   const [xpPopup, setXpPopup] = useState<{ amount: number; id: string } | null>(null);
   const [weekLogs, setWeekLogs] = useState<Record<string, string[]>>({});
 
@@ -91,8 +103,9 @@ export default function HabitsPage() {
 
   const createHabit = async () => {
     if (!user || !name.trim()) return;
-    await supabase.from("habits").insert({ user_id: user.id, name, description: description || null, attribute, frequency, xp_reward: Number(xp) || 5 });
-    setName(""); setDescription(""); setAttribute("productivity"); setFrequency("daily"); setXp("5");
+    const days = (frequency === "custom" || frequency === "weekdays") ? customDays : null;
+    await supabase.from("habits").insert({ user_id: user.id, name, description: description || null, attribute, frequency, xp_reward: Number(xp) || 5, custom_days: days } as any);
+    setName(""); setDescription(""); setAttribute("productivity"); setFrequency("daily"); setXp("5"); setCustomDays(["seg", "ter", "qua", "qui", "sex"]);
     setDialogOpen(false);
     fetchData();
     toast({ title: "Hábito criado! 🎯" });
@@ -104,7 +117,8 @@ export default function HabitsPage() {
       name: editingHabit.name, description: editingHabit.description,
       attribute: editingHabit.attribute, frequency: editingHabit.frequency,
       xp_reward: editingHabit.xp_reward, is_active: editingHabit.is_active,
-    }).eq("id", editingHabit.id);
+      custom_days: editingHabit.custom_days,
+    } as any).eq("id", editingHabit.id);
     setEditDialog(false);
     setEditingHabit(null);
     fetchData();
@@ -189,7 +203,12 @@ export default function HabitsPage() {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Frequência</Label>
-          <Select value={values.frequency} onValueChange={(v) => onChange({ ...values, frequency: v })}>
+          <Select value={values.frequency} onValueChange={(v) => {
+            const updated = { ...values, frequency: v };
+            if (v === "weekdays") updated.custom_days = ["seg", "ter", "qua", "qui", "sex"];
+            if (v === "daily") updated.custom_days = null;
+            onChange(updated);
+          }}>
             <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
             <SelectContent>{Object.entries(freqLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
           </Select>
@@ -199,6 +218,42 @@ export default function HabitsPage() {
           <Input type="number" value={values.xp_reward} onChange={(e) => onChange({ ...values, xp_reward: Number(e.target.value) })} className="bg-secondary border-border" />
         </div>
       </div>
+
+      {/* Weekday selector - shown for custom and weekdays */}
+      {(values.frequency === "custom" || values.frequency === "weekdays") && (
+        <div className="space-y-2">
+          <Label>Dias da semana</Label>
+          <div className="flex gap-1.5">
+            {weekDayOptions.map((day) => {
+              const selected = (values.custom_days || []).includes(day.key);
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  title={day.full}
+                  onClick={() => {
+                    const current: string[] = values.custom_days || [];
+                    const updated = selected ? current.filter((d: string) => d !== day.key) : [...current, day.key];
+                    onChange({ ...values, custom_days: updated });
+                  }}
+                  className={`h-9 w-9 rounded-full text-xs font-bold transition-all ${
+                    selected
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-105"
+                      : "bg-secondary text-muted-foreground hover:bg-accent hover:text-accent-foreground border border-border"
+                  }`}
+                >
+                  {day.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {(values.custom_days || []).length === 0
+              ? "Selecione pelo menos um dia"
+              : `${(values.custom_days || []).length} dia(s) selecionado(s)`}
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -255,7 +310,11 @@ export default function HabitsPage() {
                 <span className="flex items-center gap-1"><Trophy className="h-3 w-3 text-yellow-400" /> {habit.best_streak}d</span>
               )}
               <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> {habit.xp_reward} XP</span>
-              <Badge variant="outline" className="text-xs h-5">{freqLabels[habit.frequency]}</Badge>
+              <Badge variant="outline" className="text-xs h-5">
+                {habit.custom_days && habit.custom_days.length > 0
+                  ? habit.custom_days.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
+                  : freqLabels[habit.frequency]}
+              </Badge>
             </div>
 
             {/* Week heatmap */}
@@ -300,7 +359,7 @@ export default function HabitsPage() {
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Hábito</Button></DialogTrigger>
           <DialogContent className="bg-card border-border">
             <DialogHeader><DialogTitle>Criar Hábito</DialogTitle></DialogHeader>
-            <HabitFormFields values={{ name, description, attribute, frequency, xp_reward: Number(xp) }} onChange={(v) => { setName(v.name); setDescription(v.description || ""); setAttribute(v.attribute); setFrequency(v.frequency); setXp(String(v.xp_reward)); }} />
+            <HabitFormFields values={{ name, description, attribute, frequency, xp_reward: Number(xp), custom_days: customDays }} onChange={(v) => { setName(v.name); setDescription(v.description || ""); setAttribute(v.attribute); setFrequency(v.frequency); setXp(String(v.xp_reward)); setCustomDays(v.custom_days || ["seg", "ter", "qua", "qui", "sex"]); }} />
             <Button onClick={createHabit} className="w-full mt-2">Criar Hábito</Button>
           </DialogContent>
         </Dialog>

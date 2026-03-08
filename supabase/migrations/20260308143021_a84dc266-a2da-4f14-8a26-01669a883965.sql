@@ -1,0 +1,1 @@
+ALTER TABLE public.habits ADD COLUMN custom_days text[] DEFAULT NULL;
