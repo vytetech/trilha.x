@@ -3,19 +3,26 @@ import { motion } from "framer-motion";
 import {
   BarChart3, Zap, Flame, Target, Wallet, TrendingUp, TrendingDown,
   CheckCircle2, Clock, Award, Activity, ArrowUpCircle, ArrowDownCircle,
-  PieChart, Layers, DollarSign, Calendar, Users, Star, Shield
+  PieChart, Layers, DollarSign, Calendar, Users, Star, Shield,
+  Download, FileSpreadsheet, FileText
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
   LineChart, Line, CartesianGrid, Area, AreaChart,
   PieChart as RPieChart, Pie, Cell
 } from "recharts";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const fmt = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const MONTH_NAMES_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
