@@ -439,6 +439,21 @@ export default function FinancePage() {
                 </div>
               )}
 
+              {/* Fixed vs Variable toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{form.is_recurring ? "Gasto Fixo" : "Gasto Variável"}</p>
+                    <p className="text-[10px] text-muted-foreground">{form.is_recurring ? "Repete todo mês (aluguel, assinatura...)" : "Gasto pontual ou esporádico"}</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant={!form.is_recurring ? "default" : "outline"} className="text-xs h-7 px-2.5" onClick={() => setForm({ ...form, is_recurring: false })}>Variável</Button>
+                  <Button size="sm" variant={form.is_recurring ? "default" : "outline"} className="text-xs h-7 px-2.5" onClick={() => setForm({ ...form, is_recurring: true })}>Fixo</Button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Status Pagamento</Label>
                   <Select value={form.payment_status} onValueChange={(v) => setForm({ ...form, payment_status: v })}>
