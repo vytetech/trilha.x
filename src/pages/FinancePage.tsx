@@ -57,7 +57,7 @@ interface CreditCardType {
   is_active: boolean;
 }
 
-const categories = ["Alimentação", "Transporte", "Moradia", "Lazer", "Saúde", "Educação", "Assinaturas", "Cartão de Crédito", "Salário", "Freelance", "Investimentos", "Outros"];
+const categories = ["Alimentação", "Transporte", "Moradia", "Lazer", "Saúde", "Educação", "Assinaturas", "Pagamento de Fatura", "Salário", "Freelance", "Investimentos", "Outros"];
 const COLORS = [
   "hsl(153 100% 50%)", "hsl(200 80% 50%)", "hsl(280 70% 55%)", "hsl(40 90% 55%)",
   "hsl(0 72% 51%)", "hsl(180 60% 45%)", "hsl(320 70% 50%)", "hsl(120 50% 40%)",
@@ -136,14 +136,18 @@ export default function FinancePage() {
 
   useEffect(() => { fetchData(); }, [user, viewMonth, viewYear]);
 
-  const income = transactions.filter((t) => t.type === "income").reduce((a, t) => a + Number(t.amount), 0);
-  const expenses = transactions.filter((t) => t.type === "expense").reduce((a, t) => a + Number(t.amount), 0);
+  // Filter out credit card transactions from regular views — they only show in Cartões tab
+  const regularTransactions = transactions.filter(t => !t.credit_card_id);
+  const allRegularTransactions = allTransactions.filter(t => !t.credit_card_id);
+
+  const income = regularTransactions.filter((t) => t.type === "income").reduce((a, t) => a + Number(t.amount), 0);
+  const expenses = regularTransactions.filter((t) => t.type === "expense").reduce((a, t) => a + Number(t.amount), 0);
   const balance = income - expenses;
   const savingsRate = income > 0 ? Math.round((balance / income) * 100) : 0;
 
-  const txCount = transactions.length;
-  const expenseTxs = transactions.filter(t => t.type === "expense");
-  const incomeTxs = transactions.filter(t => t.type === "income");
+  const txCount = regularTransactions.length;
+  const expenseTxs = regularTransactions.filter(t => t.type === "expense");
+  const incomeTxs = regularTransactions.filter(t => t.type === "income");
 
   const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
   const daysPassed = isCurrentMonth ? now.getDate() : daysInMonth;
@@ -161,19 +165,19 @@ export default function FinancePage() {
     Object.entries(
       expenseTxs.reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + Number(t.amount); return acc; }, {} as Record<string, number>)
     ).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
-    [transactions]
+    [regularTransactions]
   );
 
   const dailySpending = useMemo(() => {
     const map: Record<number, { income: number; expense: number }> = {};
     for (let d = 1; d <= daysInMonth; d++) map[d] = { income: 0, expense: 0 };
-    transactions.forEach(tx => {
+    regularTransactions.forEach(tx => {
       const day = new Date(tx.transaction_date).getDate();
       if (tx.type === "expense") map[day].expense += Number(tx.amount);
       else map[day].income += Number(tx.amount);
     });
     return Object.entries(map).map(([day, v]) => ({ day: `${day}`, ...v }));
-  }, [transactions, daysInMonth]);
+  }, [regularTransactions, daysInMonth]);
 
   const monthlyEvolution = useMemo(() => {
     const months: { month: string; income: number; expense: number; balance: number }[] = [];
@@ -183,13 +187,13 @@ export default function FinancePage() {
       if (m <= 0) { m += 12; y -= 1; }
       const key = `${y}-${String(m).padStart(2, "0")}`;
       const label = `${MONTH_NAMES[m - 1].slice(0, 3)}/${String(y).slice(2)}`;
-      const monthTxs = allTransactions.filter(tx => tx.transaction_date.startsWith(key));
+      const monthTxs = allRegularTransactions.filter(tx => tx.transaction_date.startsWith(key));
       const inc = monthTxs.filter(t => t.type === "income").reduce((a, t) => a + Number(t.amount), 0);
       const exp = monthTxs.filter(t => t.type === "expense").reduce((a, t) => a + Number(t.amount), 0);
       months.push({ month: label, income: inc, expense: exp, balance: inc - exp });
     }
     return months;
-  }, [allTransactions, viewMonth, viewYear]);
+  }, [allRegularTransactions, viewMonth, viewYear]);
 
   const accumulatedBalance = useMemo(() => {
     let cum = 0;
@@ -203,12 +207,12 @@ export default function FinancePage() {
     Object.entries(
       incomeTxs.reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + Number(t.amount); return acc; }, {} as Record<string, number>)
     ).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
-    [transactions]
+    [regularTransactions]
   );
 
   const topExpenses = useMemo(() =>
     [...expenseTxs].sort((a, b) => Number(b.amount) - Number(a.amount)).slice(0, 5),
-    [transactions]
+    [regularTransactions]
   );
 
   const savingsGauge = [{ name: "Economia", value: Math.max(savingsRate, 0), fill: savingsRate >= 30 ? "hsl(153 100% 50%)" : savingsRate >= 15 ? "hsl(40 90% 55%)" : "hsl(0 72% 51%)" }];
@@ -341,7 +345,7 @@ export default function FinancePage() {
               {creditCards.length > 0 && form.type === "expense" && (
                 <div className="space-y-2">
                   <Label>Cartão de Crédito (opcional)</Label>
-                  <Select value={form.credit_card_id} onValueChange={(v) => setForm({ ...form, credit_card_id: v === "none" ? "" : v, category: v !== "none" ? "Cartão de Crédito" : form.category })}>
+                  <Select value={form.credit_card_id} onValueChange={(v) => setForm({ ...form, credit_card_id: v === "none" ? "" : v })}>
                     <SelectTrigger className="bg-secondary border-border"><SelectValue placeholder="Nenhum" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Nenhum</SelectItem>
@@ -532,7 +536,7 @@ export default function FinancePage() {
           </div>
 
           {/* Daily spending mini chart */}
-          {transactions.length > 0 && (
+          {regularTransactions.length > 0 && (
             <div className="rounded-xl border border-border bg-card p-5">
               <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-sm"><BarChart3 className="h-4 w-4 text-primary" /> Movimentação Diária</h3>
               <div className="h-[200px]">
@@ -554,7 +558,7 @@ export default function FinancePage() {
         {/* ========== TRANSAÇÕES ========== */}
         <TabsContent value="transacoes" className="mt-4">
           <div className="space-y-2">
-            {transactions.map((tx) => {
+            {regularTransactions.map((tx) => {
                const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
                 paid: { label: "Pago", color: "bg-primary/15 text-primary border-primary/30", icon: <CheckCircle2 className="h-3 w-3" /> },
                 unpaid: { label: "Não Pago", color: "bg-destructive/15 text-destructive border-destructive/30", icon: <AlertCircle className="h-3 w-3" /> },
@@ -612,7 +616,7 @@ export default function FinancePage() {
                 </div>
               );
             })}
-            {transactions.length === 0 && <div className="text-center py-12 text-muted-foreground"><Wallet className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>Nenhuma transação neste mês.</p></div>}
+            {regularTransactions.length === 0 && <div className="text-center py-12 text-muted-foreground"><Wallet className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>Nenhuma transação neste mês.</p></div>}
           </div>
         </TabsContent>
 
@@ -751,7 +755,33 @@ export default function FinancePage() {
                       Fecha dia {card.closing_day} · Vence dia {card.due_day} ({dueDate.toLocaleDateString("pt-BR")})
                     </p>
                   </div>
-                  <span className="font-bold font-mono text-destructive text-lg">{fmt(invoiceTotal)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold font-mono text-destructive text-lg">{fmt(invoiceTotal)}</span>
+                    {invoiceTotal > 0 && (
+                      <Button
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={async () => {
+                          if (!user) return;
+                          await supabase.from("transactions").insert({
+                            user_id: user.id,
+                            type: "expense",
+                            amount: invoiceTotal,
+                            category: "Pagamento de Fatura",
+                            description: `Fatura ${card.name} — ${MONTH_NAMES[viewMonth - 1]}/${viewYear}`,
+                            transaction_date: dueDate.toISOString().split("T")[0],
+                            payment_method: "débito",
+                            payment_status: "paid",
+                            due_date: dueDate.toISOString().split("T")[0],
+                          });
+                          fetchData();
+                          toast({ title: `Fatura do ${card.name} paga! ✅` });
+                        }}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Pagar Fatura
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {cardTxs.length === 0 ? (
