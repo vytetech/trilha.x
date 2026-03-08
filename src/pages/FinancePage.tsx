@@ -558,7 +558,7 @@ export default function FinancePage() {
         {/* ========== TRANSAÇÕES ========== */}
         <TabsContent value="transacoes" className="mt-4">
           <div className="space-y-2">
-            {transactions.map((tx) => {
+            {regularTransactions.map((tx) => {
                const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
                 paid: { label: "Pago", color: "bg-primary/15 text-primary border-primary/30", icon: <CheckCircle2 className="h-3 w-3" /> },
                 unpaid: { label: "Não Pago", color: "bg-destructive/15 text-destructive border-destructive/30", icon: <AlertCircle className="h-3 w-3" /> },
