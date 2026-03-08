@@ -3,19 +3,26 @@ import { motion } from "framer-motion";
 import {
   BarChart3, Zap, Flame, Target, Wallet, TrendingUp, TrendingDown,
   CheckCircle2, Clock, Award, Activity, ArrowUpCircle, ArrowDownCircle,
-  PieChart, Layers, DollarSign, Calendar, Users, Star, Shield
+  PieChart, Layers, DollarSign, Calendar, Users, Star, Shield,
+  Download, FileSpreadsheet, FileText
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
   LineChart, Line, CartesianGrid, Area, AreaChart,
   PieChart as RPieChart, Pie, Cell
 } from "recharts";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const fmt = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const MONTH_NAMES_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -52,6 +59,7 @@ function StatCard({ icon, label, value, sub, subColor = "text-muted-foreground",
 
 export default function ReportsPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<any[]>([]);
   const [habitLogs, setHabitLogs] = useState<any[]>([]);
   const [habits, setHabits] = useState<any[]>([]);
@@ -168,13 +176,224 @@ export default function ReportsPage() {
   const xpForNextLevel = (profile?.level || 1) * 100;
   const xpProgress = profile ? Math.round((profile.xp % xpForNextLevel) / xpForNextLevel * 100) : 0;
 
+  // === Export Functions ===
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    const now = new Date().toLocaleDateString("pt-BR");
+    doc.setFontSize(18);
+    doc.text("TRILHA - Relatório Completo", 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text(`Gerado em ${now}`, 14, 28);
+    doc.setTextColor(0);
+
+    // Visão Geral
+    doc.setFontSize(14);
+    doc.text("Visão Geral", 14, 40);
+    autoTable(doc, {
+      startY: 44,
+      head: [["Métrica", "Valor"]],
+      body: [
+        ["Nível", String(profile?.level || 1)],
+        ["XP Total", String(profile?.xp || 0)],
+        ["Tarefas Concluídas", String(tasksDone)],
+        ["Taxa de Conclusão", `${taskCompletionRate}%`],
+        ["Hábitos Completados", String(totalHabitLogs)],
+        ["Melhor Streak", `${bestStreak} dias`],
+        ["Metas Concluídas", `${goalsCompleted} de ${goals.length}`],
+        ["Taxa de Sucesso", `${goalsSuccessRate}%`],
+      ],
+      theme: "striped",
+      headStyles: { fillColor: [0, 180, 100] },
+    });
+
+    // Financeiro
+    const financialY = (doc as any).lastAutoTable.finalY + 12;
+    doc.setFontSize(14);
+    doc.text("Resumo Financeiro", 14, financialY);
+    autoTable(doc, {
+      startY: financialY + 4,
+      head: [["Métrica", "Valor"]],
+      body: [
+        ["Receita Total", fmt(totalIncome)],
+        ["Despesas Totais", fmt(totalExpenses)],
+        ["Saldo", fmt(balance)],
+        ["Taxa de Economia", `${savingsRate}%`],
+        ["Patrimônio Investido", fmt(totalInvested)],
+        ["Dividendos", fmt(totalDividends)],
+      ],
+      theme: "striped",
+      headStyles: { fillColor: [0, 180, 100] },
+    });
+
+    // Financeiro mensal
+    const monthlyY = (doc as any).lastAutoTable.finalY + 12;
+    doc.setFontSize(14);
+    doc.text("Fluxo Mensal", 14, monthlyY);
+    autoTable(doc, {
+      startY: monthlyY + 4,
+      head: [["Mês", "Receita", "Despesa", "Saldo"]],
+      body: monthlyFinance.map(m => [m.name, fmt(m.receita), fmt(m.despesa), fmt(m.saldo)]),
+      theme: "striped",
+      headStyles: { fillColor: [0, 180, 100] },
+    });
+
+    // Gastos por categoria
+    if (categorySpending.length > 0) {
+      const catY = (doc as any).lastAutoTable.finalY + 12;
+      if (catY > 250) doc.addPage();
+      const startY = catY > 250 ? 20 : catY;
+      doc.setFontSize(14);
+      doc.text("Gastos por Categoria", 14, startY);
+      autoTable(doc, {
+        startY: startY + 4,
+        head: [["Categoria", "Valor"]],
+        body: categorySpending.map(c => [c.name, fmt(c.value)]),
+        theme: "striped",
+        headStyles: { fillColor: [0, 180, 100] },
+      });
+    }
+
+    // Metas
+    if (goals.length > 0) {
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.text("Metas", 14, 20);
+      autoTable(doc, {
+        startY: 24,
+        head: [["Meta", "Progresso", "Status"]],
+        body: goals.map(g => [
+          g.name,
+          g.target_value ? `${Math.round((Number(g.current_value) / Number(g.target_value)) * 100)}%` : "—",
+          g.status === "completed" ? "Concluída" : "Ativa",
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [0, 180, 100] },
+      });
+    }
+
+    // Sonhos
+    if (dreams.length > 0) {
+      const dreamsY = (doc as any).lastAutoTable.finalY + 12;
+      doc.setFontSize(14);
+      doc.text("Sonhos", 14, dreamsY);
+      autoTable(doc, {
+        startY: dreamsY + 4,
+        head: [["Sonho", "Guardado", "Alvo", "Progresso"]],
+        body: dreams.map(d => [
+          d.title,
+          fmt(Number(d.current_amount)),
+          d.target_amount ? fmt(Number(d.target_amount)) : "—",
+          d.target_amount ? `${Math.round((Number(d.current_amount) / Number(d.target_amount)) * 100)}%` : "—",
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [0, 180, 100] },
+      });
+    }
+
+    doc.save(`TRILHA_Relatorio_${now.replace(/\//g, "-")}.pdf`);
+    toast({ title: "PDF exportado com sucesso! 📄" });
+  };
+
+  const exportExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    // Visão Geral
+    const geralData = [
+      ["Métrica", "Valor"],
+      ["Nível", profile?.level || 1],
+      ["XP Total", profile?.xp || 0],
+      ["Tarefas Concluídas", tasksDone],
+      ["Taxa de Conclusão", `${taskCompletionRate}%`],
+      ["Hábitos Completados", totalHabitLogs],
+      ["Melhor Streak", bestStreak],
+      ["Metas Concluídas", goalsCompleted],
+      ["Taxa de Sucesso", `${goalsSuccessRate}%`],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(geralData), "Visão Geral");
+
+    // Financeiro
+    const finData = [
+      ["Métrica", "Valor"],
+      ["Receita Total", totalIncome],
+      ["Despesas Totais", totalExpenses],
+      ["Saldo", balance],
+      ["Taxa de Economia", `${savingsRate}%`],
+      ["Patrimônio Investido", totalInvested],
+      ["Dividendos", totalDividends],
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(finData), "Financeiro");
+
+    // Fluxo Mensal
+    const monthlyData = [["Mês", "Receita", "Despesa", "Saldo"], ...monthlyFinance.map(m => [m.name, m.receita, m.despesa, m.saldo])];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monthlyData), "Fluxo Mensal");
+
+    // Gastos por Categoria
+    if (categorySpending.length > 0) {
+      const catData = [["Categoria", "Valor"], ...categorySpending.map(c => [c.name, c.value])];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(catData), "Categorias");
+    }
+
+    // Metas
+    if (goals.length > 0) {
+      const goalsData = [["Meta", "Valor Atual", "Valor Alvo", "Progresso", "Status"], ...goals.map(g => [
+        g.name, Number(g.current_value), Number(g.target_value),
+        g.target_value ? `${Math.round((Number(g.current_value) / Number(g.target_value)) * 100)}%` : "—",
+        g.status === "completed" ? "Concluída" : "Ativa",
+      ])];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(goalsData), "Metas");
+    }
+
+    // Sonhos
+    if (dreams.length > 0) {
+      const dreamsData = [["Sonho", "Guardado", "Alvo", "Progresso", "Status"], ...dreams.map(d => [
+        d.title, Number(d.current_amount), d.target_amount ? Number(d.target_amount) : "—",
+        d.target_amount ? `${Math.round((Number(d.current_amount) / Number(d.target_amount)) * 100)}%` : "—",
+        d.status === "completed" ? "Realizado" : "Ativo",
+      ])];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dreamsData), "Sonhos");
+    }
+
+    // Transações
+    if (transactions.length > 0) {
+      const txData = [["Data", "Tipo", "Categoria", "Descrição", "Valor", "Status"], ...transactions.filter(t => !t.credit_card_id).map(t => [
+        new Date(t.transaction_date).toLocaleDateString("pt-BR"),
+        t.type === "income" ? "Receita" : "Despesa",
+        t.category, t.description || "", Number(t.amount),
+        t.payment_status === "paid" ? "Pago" : "Pendente",
+      ])];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(txData), "Transações");
+    }
+
+    const now = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
+    XLSX.writeFile(wb, `TRILHA_Relatorio_${now}.xlsx`);
+    toast({ title: "Excel exportado com sucesso! 📊" });
+  };
+
   return (
     <div className="space-y-6 max-w-6xl">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-primary" /> Relatórios
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Análise completa da sua evolução em {currentYear}</p>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-6 w-6 text-primary" /> Relatórios
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">Análise completa da sua evolução em {currentYear}</p>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" /> Exportar
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={exportPDF} className="gap-2 cursor-pointer">
+              <FileText className="h-4 w-4 text-destructive" /> Exportar PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportExcel} className="gap-2 cursor-pointer">
+              <FileSpreadsheet className="h-4 w-4 text-primary" /> Exportar Excel
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </motion.div>
 
       <Tabs defaultValue="geral">
