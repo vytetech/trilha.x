@@ -232,19 +232,31 @@ export default function SettingsPage() {
           {/* Current plan */}
           <SectionCard>
             <SectionHeader icon={<Crown className="h-4 w-4 text-primary" />} title="Seu Plano Atual" desc="Gerencie sua assinatura" />
-            <div className={`rounded-lg border p-4 flex items-center justify-between ${(profile?.plan || "free") === "pro" ? "border-primary/30 bg-primary/5" : "border-border bg-secondary/50"}`}>
+            <div className={`rounded-lg border p-4 flex items-center justify-between ${plan === "pro" ? "border-primary/30 bg-primary/5" : "border-border bg-secondary/50"}`}>
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${(profile?.plan || "free") === "pro" ? "bg-primary/20" : "bg-muted"}`}>
-                  {(profile?.plan || "free") === "pro" ? <Crown className="h-5 w-5 text-primary" /> : <User className="h-5 w-5 text-muted-foreground" />}
+                <div className={`p-2 rounded-lg ${plan === "pro" ? "bg-primary/20" : "bg-muted"}`}>
+                  {plan === "pro" ? <Crown className="h-5 w-5 text-primary" /> : <User className="h-5 w-5 text-muted-foreground" />}
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">{(profile?.plan || "free") === "pro" ? "Plano Completo" : "Plano Free"}</p>
-                  <p className="text-xs text-muted-foreground">{(profile?.plan || "free") === "pro" ? "Acesso ilimitado a todos os recursos" : "Acesso limitado aos recursos básicos"}</p>
+                  <p className="font-semibold text-foreground">{plan === "pro" ? "Plano Completo" : "Plano Free"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {plan === "pro"
+                      ? `Acesso ilimitado • ${subscriptionEnd ? `Renova em ${new Date(subscriptionEnd).toLocaleDateString("pt-BR")}` : "Ativo"}`
+                      : "Acesso limitado aos recursos básicos"}
+                  </p>
                 </div>
               </div>
-              <Badge className={`${(profile?.plan || "free") === "pro" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"} border-none`}>
-                {(profile?.plan || "free") === "pro" ? "Ativo" : "Gratuito"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className={`${plan === "pro" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"} border-none`}>
+                  {plan === "pro" ? "Ativo" : "Gratuito"}
+                </Badge>
+                {plan === "pro" && (
+                  <Button size="sm" variant="outline" onClick={handleManageSubscription} disabled={portalLoading} className="gap-1.5">
+                    {portalLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
+                    Gerenciar
+                  </Button>
+                )}
+              </div>
             </div>
           </SectionCard>
 
