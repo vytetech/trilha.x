@@ -494,29 +494,21 @@ export default function FinancePage() {
         <TabsContent value="resumo" className="space-y-6 mt-4">
           {/* Primary KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 mb-2"><ArrowUpCircle className="h-4 w-4 text-primary" /><p className="text-xs text-muted-foreground">Receita</p></div>
-              <p className="text-xl font-bold text-primary font-mono">{fmt(income)}</p>
-              {biggestIncome && <p className="text-[10px] text-muted-foreground mt-1 truncate">Maior: {biggestIncome.description || biggestIncome.category}</p>}
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 mb-2"><ArrowDownCircle className="h-4 w-4 text-destructive" /><p className="text-xs text-muted-foreground">Despesas</p></div>
-              <p className="text-xl font-bold text-destructive font-mono">{fmt(expenses)}</p>
-              {biggestExpense && <p className="text-[10px] text-muted-foreground mt-1 truncate">Maior: {biggestExpense.description || biggestExpense.category}</p>}
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 mb-2"><DollarSign className="h-4 w-4 text-accent" /><p className="text-xs text-muted-foreground">Saldo</p></div>
-              <p className={`text-xl font-bold font-mono ${balance >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(balance)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">{balance >= 0 ? "Você está no verde! 🎉" : "Atenção com os gastos ⚠️"}</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 mb-2"><Target className="h-4 w-4 text-primary" /><p className="text-xs text-muted-foreground">Taxa Economia</p></div>
-              <p className={`text-xl font-bold font-mono ${savingsRate >= 30 ? "text-primary" : savingsRate >= 0 ? "text-foreground" : "text-destructive"}`}>{savingsRate}%</p>
-              <p className="text-[10px] text-muted-foreground mt-1">{savingsRate >= 30 ? "Excelente! 🏆" : savingsRate >= 15 ? "Bom ritmo 💪" : "Pode melhorar 📈"}</p>
-            </motion.div>
+            {[
+              { icon: <ArrowUpCircle className="h-4 w-4 text-primary" />, label: "Receita", value: fmt(income), color: "text-primary", sub: incomeVariation !== 0 ? `${incomeVariation > 0 ? "+" : ""}${incomeVariation}% vs mês anterior` : "Sem dados anteriores", subColor: incomeVariation >= 0 ? "text-primary" : "text-destructive" },
+              { icon: <ArrowDownCircle className="h-4 w-4 text-destructive" />, label: "Despesas", value: fmt(expenses), color: "text-destructive", sub: expenseVariation !== 0 ? `${expenseVariation > 0 ? "+" : ""}${expenseVariation}% vs mês anterior` : "Sem dados anteriores", subColor: expenseVariation <= 0 ? "text-primary" : "text-destructive" },
+              { icon: <DollarSign className="h-4 w-4 text-accent" />, label: "Saldo Livre", value: fmt(balance), color: balance >= 0 ? "text-primary" : "text-destructive", sub: balance >= 0 ? "No verde! 🎉" : "Atenção ⚠️" },
+              { icon: <Target className="h-4 w-4 text-primary" />, label: "Taxa Economia", value: `${savingsRate}%`, color: savingsRate >= 30 ? "text-primary" : savingsRate >= 0 ? "text-foreground" : "text-destructive", sub: savingsRate >= 30 ? "Excelente! 🏆" : savingsRate >= 15 ? "Bom ritmo 💪" : "Meta: 30%+" },
+            ].map((kpi, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center gap-2 mb-2">{kpi.icon}<p className="text-xs text-muted-foreground">{kpi.label}</p></div>
+                <p className={`text-xl font-bold font-mono ${kpi.color}`}>{kpi.value}</p>
+                <p className={`text-[10px] mt-1 ${kpi.subColor || "text-muted-foreground"}`}>{kpi.sub}</p>
+              </motion.div>
+            ))}
           </div>
 
-          {/* Secondary KPIs */}
+          {/* Secondary KPIs Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-2 mb-2"><CalendarDays className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Média Diária</p></div>
@@ -529,9 +521,9 @@ export default function FinancePage() {
               <p className="text-[10px] text-muted-foreground mt-1">{projectedExpense > income ? "Acima da receita!" : "Dentro do limite"}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 mb-2"><Activity className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Transações</p></div>
-              <p className="text-lg font-bold font-mono text-foreground">{txCount}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">{incomeTxs.length} receitas · {expenseTxs.length} despesas</p>
+              <div className="flex items-center gap-2 mb-2"><Percent className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Comprometimento</p></div>
+              <p className={`text-lg font-bold font-mono ${commitmentRate >= 100 ? "text-destructive" : commitmentRate >= 80 ? "text-yellow-400" : "text-primary"}`}>{commitmentRate}%</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{commitmentRate < 70 ? "Saudável ✅" : commitmentRate < 90 ? "Atenção 🔶" : "Crítico 🔴"}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-2 mb-2"><Flame className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Saúde Orçamento</p></div>
@@ -542,7 +534,103 @@ export default function FinancePage() {
             </div>
           </div>
 
-          {/* Charts row */}
+          {/* Third KPI row: Cards, Unpaid, Ticket, Fixed ratio */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><CreditCard className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Faturas Cartões</p></div>
+              <p className="text-lg font-bold font-mono text-foreground">{fmt(totalCardInvoices)}</p>
+              <div className="mt-1.5">
+                <div className="w-full h-1.5 rounded-full bg-secondary">
+                  <div className={`h-full rounded-full transition-all ${cardUsagePct >= 80 ? "bg-destructive" : cardUsagePct >= 50 ? "bg-yellow-400" : "bg-primary"}`} style={{ width: `${Math.min(cardUsagePct, 100)}%` }} />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">{cardUsagePct}% do limite total</p>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><FileWarning className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Contas a Pagar</p></div>
+              <p className={`text-lg font-bold font-mono ${unpaidTotal > 0 ? "text-destructive" : "text-primary"}`}>{fmt(unpaidTotal)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {overdueTotal > 0 ? <span className="text-destructive font-semibold">{fmt(overdueTotal)} atrasado!</span> : unpaidTxs.length > 0 ? `${unpaidTxs.length} pendente(s)` : "Tudo em dia ✅"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><Receipt className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Ticket Médio</p></div>
+              <p className="text-lg font-bold font-mono text-foreground">{fmt(avgExpenseTicket)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{expenseTxs.length} despesas · {incomeTxs.length} receitas</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><Scale className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Fixo vs Variável</p></div>
+              <p className="text-lg font-bold font-mono text-foreground">{fixedRatio}% / {100 - fixedRatio}%</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{fmt(recurringTotal)} fixo · {fmt(variableTotal)} variável</p>
+            </div>
+          </div>
+
+          {/* Fourth KPI row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><Banknote className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Renda Disponível</p></div>
+              <p className={`text-lg font-bold font-mono ${disposableIncome >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(disposableIncome)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Receita − Gastos fixos</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><ShieldCheck className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Status Pagamentos</p></div>
+              <p className="text-lg font-bold font-mono text-primary">{paidPct}%</p>
+              <div className="w-full h-1.5 rounded-full bg-secondary mt-1.5">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${paidPct}%` }} />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">das despesas quitadas</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><Activity className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Transações</p></div>
+              <p className="text-lg font-bold font-mono text-foreground">{txCount}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{incomeTxs.length} receitas · {expenseTxs.length} despesas</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-2"><Zap className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Score Financeiro</p></div>
+              {(() => {
+                const score = Math.max(0, Math.min(100,
+                  (savingsRate >= 30 ? 30 : savingsRate >= 0 ? savingsRate : 0) +
+                  (commitmentRate <= 70 ? 25 : commitmentRate <= 90 ? 15 : 0) +
+                  (paidPct >= 90 ? 25 : paidPct * 0.25) +
+                  (cardUsagePct <= 30 ? 20 : cardUsagePct <= 60 ? 10 : 0)
+                ));
+                const scoreColor = score >= 70 ? "text-primary" : score >= 40 ? "text-yellow-400" : "text-destructive";
+                const scoreLabel = score >= 70 ? "Ótimo 🏆" : score >= 40 ? "Regular 🔶" : "Crítico 🔴";
+                return (
+                  <>
+                    <p className={`text-lg font-bold font-mono ${scoreColor}`}>{Math.round(score)}/100</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{scoreLabel}</p>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Cash Flow Chart */}
+          {regularTransactions.length > 0 && (
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-sm"><TrendingUp className="h-4 w-4 text-primary" /> Fluxo de Caixa Acumulado</h3>
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={cashFlowData}>
+                    <defs>
+                      <linearGradient id="cashFlowGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(200 80% 50%)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(200 80% 50%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
+                    <XAxis dataKey="day" tick={{ fontSize: 9, fill: "hsl(220 10% 50%)" }} interval={2} />
+                    <YAxis tick={{ fontSize: 10, fill: "hsl(220 10% 50%)" }} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number, name: string) => [fmt(v), name === "cumulative" ? "Acumulado" : name === "income" ? "Receita" : "Despesa"]} />
+                    <Area type="monotone" dataKey="cumulative" stroke="hsl(200 80% 50%)" fill="url(#cashFlowGrad)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Charts row: Categories + Income Sources */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categoryData.length > 0 && (
               <div className="rounded-xl border border-border bg-card p-5">
@@ -575,6 +663,48 @@ export default function FinancePage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Weekly Spending + Fixed vs Variable */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {weeklySpending.length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-5">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-sm"><Layers className="h-4 w-4 text-primary" /> Gastos por Semana</h3>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={weeklySpending}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
+                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(220 10% 50%)" }} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(220 10% 50%)" }} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={noCursor} formatter={(v: number) => [fmt(v), "Gastos"]} />
+                      <Bar dataKey="amount" fill="hsl(280 70% 55%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-sm"><Scale className="h-4 w-4 text-primary" /> Composição de Gastos</h3>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RPieChart>
+                    <Pie
+                      data={[
+                        { name: "Fixo", value: recurringTotal || 1 },
+                        { name: "Variável", value: variableTotal || 1 },
+                      ]}
+                      dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={35} paddingAngle={4}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}
+                    >
+                      <Cell fill="hsl(200 80% 50%)" />
+                      <Cell fill="hsl(40 90% 55%)" />
+                    </Pie>
+                    <Tooltip contentStyle={tooltipStyle} cursor={noCursor} formatter={(v: number) => [fmt(v), "Valor"]} />
+                  </RPieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
 
           {/* Top expenses + Savings gauge */}
@@ -631,6 +761,42 @@ export default function FinancePage() {
               </div>
             </div>
           )}
+
+          {/* Monthly comparison card */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-sm"><ArrowRightLeft className="h-4 w-4 text-primary" /> Comparação com Mês Anterior</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 rounded-lg bg-secondary/30">
+                <p className="text-xs text-muted-foreground mb-1">Receita</p>
+                <p className="font-bold font-mono text-primary text-sm">{fmt(income)}</p>
+                <p className="text-[10px] text-muted-foreground">Anterior: {fmt(prevMonthData.income)}</p>
+                <Badge className={`mt-1 text-[10px] ${incomeVariation >= 0 ? "bg-primary/15 text-primary border-primary/30" : "bg-destructive/15 text-destructive border-destructive/30"}`}>
+                  {incomeVariation >= 0 ? "↑" : "↓"} {Math.abs(incomeVariation)}%
+                </Badge>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-secondary/30">
+                <p className="text-xs text-muted-foreground mb-1">Despesas</p>
+                <p className="font-bold font-mono text-destructive text-sm">{fmt(expenses)}</p>
+                <p className="text-[10px] text-muted-foreground">Anterior: {fmt(prevMonthData.expenses)}</p>
+                <Badge className={`mt-1 text-[10px] ${expenseVariation <= 0 ? "bg-primary/15 text-primary border-primary/30" : "bg-destructive/15 text-destructive border-destructive/30"}`}>
+                  {expenseVariation >= 0 ? "↑" : "↓"} {Math.abs(expenseVariation)}%
+                </Badge>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-secondary/30">
+                <p className="text-xs text-muted-foreground mb-1">Saldo</p>
+                <p className={`font-bold font-mono text-sm ${balance >= 0 ? "text-primary" : "text-destructive"}`}>{fmt(balance)}</p>
+                <p className="text-[10px] text-muted-foreground">Anterior: {fmt(prevMonthData.balance)}</p>
+                {(() => {
+                  const balanceVar = prevMonthData.balance !== 0 ? Math.round(((balance - prevMonthData.balance) / Math.abs(prevMonthData.balance)) * 100) : 0;
+                  return (
+                    <Badge className={`mt-1 text-[10px] ${balanceVar >= 0 ? "bg-primary/15 text-primary border-primary/30" : "bg-destructive/15 text-destructive border-destructive/30"}`}>
+                      {balanceVar >= 0 ? "↑" : "↓"} {Math.abs(balanceVar)}%
+                    </Badge>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         {/* ========== TRANSAÇÕES ========== */}
