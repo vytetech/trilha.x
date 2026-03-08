@@ -211,13 +211,28 @@ export default function FinancePage() {
 
   const savingsGauge = [{ name: "Economia", value: Math.max(savingsRate, 0), fill: savingsRate >= 30 ? "hsl(153 100% 50%)" : savingsRate >= 15 ? "hsl(40 90% 55%)" : "hsl(0 72% 51%)" }];
 
-  // Credit card invoice calculation
-  const getCardInvoice = (cardId: string) => {
-    return transactions.filter(tx => tx.credit_card_id === cardId).reduce((a, t) => a + Number(t.amount), 0);
+  // Credit card invoice calculation based on closing day logic
+  // Invoice for month M due on due_day of month M covers transactions from:
+  //   closing_day+1 of month M-1  to  closing_day of month M
+  const getCardInvoiceTxs = (card: CreditCardType) => {
+    const closingDay = card.closing_day;
+    // Invoice period: from previous month closing_day+1 to current month closing_day
+    const prevMonth = viewMonth - 1 <= 0 ? 12 : viewMonth - 1;
+    const prevYear = viewMonth - 1 <= 0 ? viewYear - 1 : viewYear;
+    
+    const startDate = new Date(prevYear, prevMonth - 1, closingDay + 1);
+    const endDate = new Date(viewYear, viewMonth - 1, closingDay);
+    endDate.setHours(23, 59, 59, 999);
+
+    return allTransactions.filter(tx => {
+      if (tx.credit_card_id !== card.id) return false;
+      const txDate = new Date(tx.transaction_date);
+      return txDate >= startDate && txDate <= endDate;
+    });
   };
 
-  const getCardAllTimeInvoice = (cardId: string) => {
-    return allTransactions.filter(tx => tx.credit_card_id === cardId);
+  const getCardInvoiceTotal = (card: CreditCardType) => {
+    return getCardInvoiceTxs(card).reduce((a, t) => a + Number(t.amount), 0);
   };
 
   const createTransaction = async () => {
@@ -612,7 +627,7 @@ export default function FinancePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {creditCards.map((card, idx) => {
-              const invoiceTotal = getCardInvoice(card.id);
+              const invoiceTotal = getCardInvoiceTotal(card);
               const usedPct = Number(card.credit_limit) > 0 ? Math.round((invoiceTotal / Number(card.credit_limit)) * 100) : 0;
               const gradientClass = CARD_COLORS[idx % CARD_COLORS.length];
 
@@ -625,8 +640,8 @@ export default function FinancePage() {
                   className={`relative rounded-2xl p-5 bg-gradient-to-br ${gradientClass} text-white shadow-lg cursor-pointer overflow-hidden`}
                   onClick={() => setSelectedCardId(selectedCardId === card.id ? null : card.id)}
                 >
-                  {/* Card chip decoration */}
-                  <div className="absolute top-4 right-4 w-10 h-7 rounded bg-white/20 backdrop-blur-sm" />
+                   {/* Card chip decoration */}
+                   <div className="absolute top-4 right-16 w-10 h-7 rounded bg-white/20" />
                   <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
 
                   <div className="flex items-center justify-between mb-6">
@@ -680,8 +695,9 @@ export default function FinancePage() {
           {selectedCardId && (() => {
             const card = creditCards.find(c => c.id === selectedCardId);
             if (!card) return null;
-            const cardTxs = transactions.filter(tx => tx.credit_card_id === selectedCardId);
+            const cardTxs = getCardInvoiceTxs(card);
             const invoiceTotal = cardTxs.reduce((a, t) => a + Number(t.amount), 0);
+            const dueDate = new Date(viewYear, viewMonth - 1, card.due_day);
 
             return (
               <motion.div
@@ -690,15 +706,20 @@ export default function FinancePage() {
                 className="rounded-xl border border-border bg-card p-5 space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-primary" />
-                    Fatura {card.name} — {MONTH_NAMES[viewMonth - 1]}
-                  </h4>
+                  <div>
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                      Fatura {card.name} — {MONTH_NAMES[viewMonth - 1]}
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Fecha dia {card.closing_day} · Vence dia {card.due_day} ({dueDate.toLocaleDateString("pt-BR")})
+                    </p>
+                  </div>
                   <span className="font-bold font-mono text-destructive text-lg">{fmt(invoiceTotal)}</span>
                 </div>
 
                 {cardTxs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">Nenhuma compra neste cartão neste mês.</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">Nenhuma compra neste período de fatura.</p>
                 ) : (
                   <div className="space-y-2">
                     {cardTxs.map(tx => (
