@@ -239,16 +239,28 @@ export default function FinancePage() {
 
   const createTransaction = async () => {
     if (!user || !form.amount) return;
-    await supabase.from("transactions").insert({
-      user_id: user.id, type: form.type, amount: Number(form.amount), category: form.category,
-      description: form.description || null, transaction_date: form.date, payment_method: form.payment_method || null,
-      payment_status: form.payment_status, due_date: form.due_date || null,
-      credit_card_id: form.credit_card_id || null,
+    const totalInstallments = Math.max(1, Number(form.installments) || 1);
+    const installmentAmount = Number(form.amount) / totalInstallments;
+    const baseDate = new Date(form.date);
+
+    const rows = Array.from({ length: totalInstallments }, (_, i) => {
+      const txDate = new Date(baseDate);
+      txDate.setMonth(txDate.getMonth() + i);
+      return {
+        user_id: user.id, type: form.type, amount: Math.round(installmentAmount * 100) / 100, category: form.category,
+        description: totalInstallments > 1 ? `${form.description || form.category} (${i + 1}/${totalInstallments})` : (form.description || null),
+        transaction_date: txDate.toISOString().split("T")[0], payment_method: form.payment_method || null,
+        payment_status: i === 0 ? form.payment_status : "unpaid", due_date: form.due_date || null,
+        credit_card_id: form.credit_card_id || null,
+        installment_count: totalInstallments, installment_number: i + 1,
+      };
     });
-    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "" });
+
+    await supabase.from("transactions").insert(rows);
+    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1" });
     setDialogOpen(false);
     fetchData();
-    toast({ title: "Transação registrada! 💰" });
+    toast({ title: totalInstallments > 1 ? `Compra parcelada em ${totalInstallments}x registrada! 💳` : "Transação registrada! 💰" });
   };
 
   const createBudget = async () => {
