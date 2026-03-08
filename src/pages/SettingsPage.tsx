@@ -263,11 +263,11 @@ export default function SettingsPage() {
           {/* Plan comparison */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Free */}
-            <div className={`rounded-xl border p-6 space-y-5 ${(profile?.plan || "free") === "free" ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}>
+            <div className={`rounded-xl border p-6 space-y-5 ${plan === "free" ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}>
               <div>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-foreground">Free</h3>
-                  {(profile?.plan || "free") === "free" && <Badge className="bg-primary/20 text-primary border-none text-xs">Atual</Badge>}
+                  {plan === "free" && <Badge className="bg-primary/20 text-primary border-none text-xs">Atual</Badge>}
                 </div>
                 <p className="text-3xl font-bold text-foreground mt-2">R$ 0<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                 <p className="text-xs text-muted-foreground mt-1">Para começar a organizar sua vida</p>
