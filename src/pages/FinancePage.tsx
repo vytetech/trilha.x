@@ -486,7 +486,7 @@ export default function FinancePage() {
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="transacoes">Transações</TabsTrigger>
           <TabsTrigger value="cartoes">Cartões</TabsTrigger>
-          <TabsTrigger value="graficos">Gráficos</TabsTrigger>
+          <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
           <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
         </TabsList>
 
