@@ -324,7 +324,7 @@ export default function FinancePage() {
     });
 
     await supabase.from("transactions").insert(rows);
-    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1" });
+    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1", is_recurring: false });
     setDialogOpen(false);
     fetchData();
     toast({ title: totalInstallments > 1 ? `Compra parcelada em ${totalInstallments}x registrada! 💳` : "Transação registrada! 💰" });
