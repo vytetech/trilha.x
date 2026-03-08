@@ -218,8 +218,26 @@ export default function FinancePage() {
 
   const savingsGauge = [{ name: "Economia", value: Math.max(savingsRate, 0), fill: savingsRate >= 30 ? "hsl(153 100% 50%)" : savingsRate >= 15 ? "hsl(40 90% 55%)" : "hsl(0 72% 51%)" }];
 
+  // Credit card invoice calculation based on closing day logic
+  const getCardInvoiceTxs = (card: CreditCardType) => {
+    const closingDay = card.closing_day;
+    const prevMonth = viewMonth - 1 <= 0 ? 12 : viewMonth - 1;
+    const prevYear = viewMonth - 1 <= 0 ? viewYear - 1 : viewYear;
+    const startDate = new Date(prevYear, prevMonth - 1, closingDay + 1);
+    const endDate = new Date(viewYear, viewMonth - 1, closingDay);
+    endDate.setHours(23, 59, 59, 999);
+    return allTransactions.filter(tx => {
+      if (tx.credit_card_id !== card.id) return false;
+      const txDate = new Date(tx.transaction_date);
+      return txDate >= startDate && txDate <= endDate;
+    });
+  };
+
+  const getCardInvoiceTotal = (card: CreditCardType) => {
+    return getCardInvoiceTxs(card).reduce((a, t) => a + Number(t.amount), 0);
+  };
+
   // === ADVANCED KPIS ===
-  // Previous month data for comparison
   const prevMonthData = useMemo(() => {
     let pm = viewMonth - 1;
     let py = viewYear;
@@ -234,38 +252,29 @@ export default function FinancePage() {
   const expenseVariation = prevMonthData.expenses > 0 ? Math.round(((expenses - prevMonthData.expenses) / prevMonthData.expenses) * 100) : 0;
   const incomeVariation = prevMonthData.income > 0 ? Math.round(((income - prevMonthData.income) / prevMonthData.income) * 100) : 0;
 
-  // Unpaid bills
   const unpaidTxs = regularTransactions.filter(t => t.payment_status === "unpaid");
   const unpaidTotal = unpaidTxs.reduce((a, t) => a + Number(t.amount), 0);
   const overdueTxs = unpaidTxs.filter(t => t.due_date && new Date(t.due_date) < now);
   const overdueTotal = overdueTxs.reduce((a, t) => a + Number(t.amount), 0);
 
-  // Credit card totals
   const totalCardInvoices = creditCards.reduce((a, c) => a + getCardInvoiceTotal(c), 0);
   const totalCardLimit = creditCards.reduce((a, c) => a + Number(c.credit_limit), 0);
   const cardUsagePct = totalCardLimit > 0 ? Math.round((totalCardInvoices / totalCardLimit) * 100) : 0;
 
-  // Average ticket
   const avgExpenseTicket = expenseTxs.length > 0 ? expenses / expenseTxs.length : 0;
   const avgIncomeTicket = incomeTxs.length > 0 ? income / incomeTxs.length : 0;
 
-  // Recurring vs one-time
   const recurringExpenses = expenseTxs.filter(t => t.category === "Assinaturas" || t.category === "Moradia" || t.category === "Pagamento de Fatura");
   const recurringTotal = recurringExpenses.reduce((a, t) => a + Number(t.amount), 0);
   const variableTotal = expenses - recurringTotal;
   const fixedRatio = expenses > 0 ? Math.round((recurringTotal / expenses) * 100) : 0;
 
-  // Income commitment rate (how much of income goes to expenses)
   const commitmentRate = income > 0 ? Math.round((expenses / income) * 100) : 0;
-
-  // Disposable income (after fixed expenses)
   const disposableIncome = income - recurringTotal;
 
-  // Payment status breakdown
   const paidTotal = regularTransactions.filter(t => t.type === "expense" && t.payment_status === "paid").reduce((a, t) => a + Number(t.amount), 0);
   const paidPct = expenses > 0 ? Math.round((paidTotal / expenses) * 100) : 100;
 
-  // Weekly spending
   const weeklySpending = useMemo(() => {
     const weeks: { week: string; amount: number }[] = [];
     for (let w = 0; w < 5; w++) {
@@ -276,13 +285,11 @@ export default function FinancePage() {
         const day = new Date(t.transaction_date).getDate();
         return day >= startDay && day <= endDay;
       });
-      const total = weekTxs.reduce((a, t) => a + Number(t.amount), 0);
-      weeks.push({ week: `S${w + 1} (${startDay}-${endDay})`, amount: total });
+      weeks.push({ week: `S${w + 1} (${startDay}-${endDay})`, amount: weekTxs.reduce((a, t) => a + Number(t.amount), 0) });
     }
     return weeks;
   }, [expenseTxs, daysInMonth]);
 
-  // Cash flow data (cumulative through month)
   const cashFlowData = useMemo(() => {
     let cumulative = 0;
     return Array.from({ length: daysInMonth }, (_, i) => {
@@ -294,30 +301,6 @@ export default function FinancePage() {
       return { day: String(day), cumulative, income: dayIncome, expense: dayExpense };
     });
   }, [regularTransactions, daysInMonth]);
-
-  // Credit card invoice calculation based on closing day logic
-  // Invoice for month M due on due_day of month M covers transactions from:
-  //   closing_day+1 of month M-1  to  closing_day of month M
-  const getCardInvoiceTxs = (card: CreditCardType) => {
-    const closingDay = card.closing_day;
-    // Invoice period: from previous month closing_day+1 to current month closing_day
-    const prevMonth = viewMonth - 1 <= 0 ? 12 : viewMonth - 1;
-    const prevYear = viewMonth - 1 <= 0 ? viewYear - 1 : viewYear;
-    
-    const startDate = new Date(prevYear, prevMonth - 1, closingDay + 1);
-    const endDate = new Date(viewYear, viewMonth - 1, closingDay);
-    endDate.setHours(23, 59, 59, 999);
-
-    return allTransactions.filter(tx => {
-      if (tx.credit_card_id !== card.id) return false;
-      const txDate = new Date(tx.transaction_date);
-      return txDate >= startDate && txDate <= endDate;
-    });
-  };
-
-  const getCardInvoiceTotal = (card: CreditCardType) => {
-    return getCardInvoiceTxs(card).reduce((a, t) => a + Number(t.amount), 0);
-  };
 
   const createTransaction = async () => {
     if (!user || !form.amount) return;
