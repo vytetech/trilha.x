@@ -298,14 +298,14 @@ export default function SettingsPage() {
             </div>
 
             {/* Pro / Completo */}
-            <div className={`rounded-xl border p-6 space-y-5 relative overflow-hidden ${(profile?.plan || "free") === "pro" ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}>
+            <div className={`rounded-xl border p-6 space-y-5 relative overflow-hidden ${plan === "pro" ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}>
               <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
                 RECOMENDADO
               </div>
               <div>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-foreground flex items-center gap-2"><Crown className="h-5 w-5 text-primary" /> Completo</h3>
-                  {(profile?.plan || "free") === "pro" && <Badge className="bg-primary/20 text-primary border-none text-xs">Atual</Badge>}
+                  {plan === "pro" && <Badge className="bg-primary/20 text-primary border-none text-xs">Atual</Badge>}
                 </div>
                 <p className="text-3xl font-bold text-foreground mt-2">R$ 19,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                 <p className="text-xs text-muted-foreground mt-1">Desbloqueie todo o potencial do TRILHA</p>
