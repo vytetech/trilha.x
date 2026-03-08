@@ -36,6 +36,7 @@ interface Transaction {
   credit_card_id: string | null;
   installment_count: number;
   installment_number: number;
+  is_recurring: boolean;
 }
 
 interface Budget {
@@ -96,7 +97,7 @@ export default function FinancePage() {
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [form, setForm] = useState({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1" });
+  const [form, setForm] = useState({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1", is_recurring: false });
   const [budgetForm, setBudgetForm] = useState({ category: "Alimentação", limit: "" });
   const [cardForm, setCardForm] = useState({ name: "", last_four: "", brand: "Visa", credit_limit: "", closing_day: "1", due_day: "10" });
 
@@ -264,7 +265,7 @@ export default function FinancePage() {
   const avgExpenseTicket = expenseTxs.length > 0 ? expenses / expenseTxs.length : 0;
   const avgIncomeTicket = incomeTxs.length > 0 ? income / incomeTxs.length : 0;
 
-  const recurringExpenses = expenseTxs.filter(t => t.category === "Assinaturas" || t.category === "Moradia" || t.category === "Pagamento de Fatura");
+  const recurringExpenses = expenseTxs.filter(t => t.is_recurring);
   const recurringTotal = recurringExpenses.reduce((a, t) => a + Number(t.amount), 0);
   const variableTotal = expenses - recurringTotal;
   const fixedRatio = expenses > 0 ? Math.round((recurringTotal / expenses) * 100) : 0;
@@ -318,11 +319,12 @@ export default function FinancePage() {
         payment_status: i === 0 ? form.payment_status : "unpaid", due_date: form.due_date || null,
         credit_card_id: form.credit_card_id || null,
         installment_count: totalInstallments, installment_number: i + 1,
+        is_recurring: form.is_recurring,
       };
     });
 
     await supabase.from("transactions").insert(rows);
-    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1" });
+    setForm({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1", is_recurring: false });
     setDialogOpen(false);
     fetchData();
     toast({ title: totalInstallments > 1 ? `Compra parcelada em ${totalInstallments}x registrada! 💳` : "Transação registrada! 💰" });
@@ -436,6 +438,21 @@ export default function FinancePage() {
                   </Select>
                 </div>
               )}
+
+              {/* Fixed vs Variable toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{form.is_recurring ? "Gasto Fixo" : "Gasto Variável"}</p>
+                    <p className="text-[10px] text-muted-foreground">{form.is_recurring ? "Repete todo mês (aluguel, assinatura...)" : "Gasto pontual ou esporádico"}</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant={!form.is_recurring ? "default" : "outline"} className="text-xs h-7 px-2.5" onClick={() => setForm({ ...form, is_recurring: false })}>Variável</Button>
+                  <Button size="sm" variant={form.is_recurring ? "default" : "outline"} className="text-xs h-7 px-2.5" onClick={() => setForm({ ...form, is_recurring: true })}>Fixo</Button>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Status Pagamento</Label>
@@ -814,6 +831,11 @@ export default function FinancePage() {
                         {tx.installment_count > 1 && (
                           <Badge variant="outline" className="text-[10px] gap-1 border-accent/30 text-accent">
                             {tx.installment_number}/{tx.installment_count}x
+                          </Badge>
+                        )}
+                        {tx.is_recurring && (
+                          <Badge variant="outline" className="text-[10px] gap-1 border-blue-400/30 text-blue-400">
+                            <Layers className="h-2.5 w-2.5" /> Fixo
                           </Badge>
                         )}
                         {tx.due_date && (
