@@ -536,7 +536,7 @@ export default function FinancePage() {
           </div>
 
           {/* Daily spending mini chart */}
-          {transactions.length > 0 && (
+          {regularTransactions.length > 0 && (
             <div className="rounded-xl border border-border bg-card p-5">
               <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-sm"><BarChart3 className="h-4 w-4 text-primary" /> Movimentação Diária</h3>
               <div className="h-[200px]">
