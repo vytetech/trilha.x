@@ -11,6 +11,11 @@ serve(async (req) => {
   }
 
   try {
+    const BRAPI_API_TOKEN = Deno.env.get("BRAPI_API_TOKEN");
+    if (!BRAPI_API_TOKEN) {
+      throw new Error("BRAPI_API_TOKEN is not configured");
+    }
+
     const { tickers } = await req.json();
     
     if (!tickers || !Array.isArray(tickers) || tickers.length === 0) {
@@ -20,7 +25,7 @@ serve(async (req) => {
     }
 
     const tickerStr = tickers.join(',');
-    const response = await fetch(`https://brapi.dev/api/quote/${tickerStr}?token=demo`);
+    const response = await fetch(`https://brapi.dev/api/quote/${tickerStr}?token=${BRAPI_API_TOKEN}`);
     const data = await response.json();
 
     if (!response.ok) {
