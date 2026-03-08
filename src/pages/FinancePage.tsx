@@ -265,7 +265,7 @@ export default function FinancePage() {
   const avgExpenseTicket = expenseTxs.length > 0 ? expenses / expenseTxs.length : 0;
   const avgIncomeTicket = incomeTxs.length > 0 ? income / incomeTxs.length : 0;
 
-  const recurringExpenses = expenseTxs.filter(t => t.category === "Assinaturas" || t.category === "Moradia" || t.category === "Pagamento de Fatura");
+  const recurringExpenses = expenseTxs.filter(t => t.is_recurring);
   const recurringTotal = recurringExpenses.reduce((a, t) => a + Number(t.amount), 0);
   const variableTotal = expenses - recurringTotal;
   const fixedRatio = expenses > 0 ? Math.round((recurringTotal / expenses) * 100) : 0;
