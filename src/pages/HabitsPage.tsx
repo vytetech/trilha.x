@@ -117,7 +117,8 @@ export default function HabitsPage() {
       name: editingHabit.name, description: editingHabit.description,
       attribute: editingHabit.attribute, frequency: editingHabit.frequency,
       xp_reward: editingHabit.xp_reward, is_active: editingHabit.is_active,
-    }).eq("id", editingHabit.id);
+      custom_days: editingHabit.custom_days,
+    } as any).eq("id", editingHabit.id);
     setEditDialog(false);
     setEditingHabit(null);
     fetchData();
