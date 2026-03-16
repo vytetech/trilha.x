@@ -395,12 +395,12 @@ export default function TasksPage() {
               {selectedDay ? format(selectedDay, "EEEE, dd 'de' MMMM", { locale: ptBR }) : ""}
             </DialogTitle>
           </DialogHeader>
-          <DayDetailContent
+          <DayDetailHabits
             selectedDay={selectedDay}
             selectedDayTasks={selectedDayTasks}
             habits={habits}
-            completedHabits={completedHabits}
-            user={user}
+            todayCompletedHabits={completedHabits}
+            userId={user?.id}
             TaskCard={TaskCard}
           />
         </DialogContent>
