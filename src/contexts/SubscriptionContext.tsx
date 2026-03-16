@@ -48,8 +48,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Refresh session to ensure we have a valid token
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      const currentToken = refreshData?.session?.access_token || session.access_token;
+
       const { data, error } = await supabase.functions.invoke("check-subscription", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${currentToken}` },
       });
 
       if (!error && data) {
