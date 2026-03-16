@@ -35,9 +35,9 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) {
       logStep("Auth error (likely expired token)", { message: userError.message });
-      return new Response(JSON.stringify({ subscribed: false, plan: "free", error: "auth_expired" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized: token expired or invalid" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+        status: 401,
       });
     }
     const user = userData.user;
