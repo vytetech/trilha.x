@@ -395,42 +395,14 @@ export default function TasksPage() {
               {selectedDay ? format(selectedDay, "EEEE, dd 'de' MMMM", { locale: ptBR }) : ""}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-5">
-            <div>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                <CheckSquare className="h-3.5 w-3.5 text-primary" /> Tarefas ({selectedDayTasks.length})
-              </h4>
-              {selectedDayTasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground bg-secondary/50 rounded-lg p-4 text-center">Nenhuma tarefa agendada</p>
-              ) : (
-                <div className="space-y-2">
-                  {selectedDayTasks.map((task) => <TaskCard key={task.id} task={task} showActions={true} />)}
-                </div>
-              )}
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Flame className="h-3.5 w-3.5 text-primary" /> Hábitos ({habits.length})
-              </h4>
-              {habits.length === 0 ? (
-                <p className="text-sm text-muted-foreground bg-secondary/50 rounded-lg p-4 text-center">Nenhum hábito cadastrado</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {habits.map((habit) => (
-                    <div key={habit.id} className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border transition-all",
-                      completedHabits.has(habit.id) ? "bg-primary/5 border-primary/20" : "bg-secondary/30 border-border"
-                    )}>
-                      <Checkbox checked={completedHabits.has(habit.id)} className="pointer-events-none" />
-                      <span className={cn("text-sm flex-1", completedHabits.has(habit.id) ? "line-through text-muted-foreground" : "text-foreground")}>{habit.name}</span>
-                      <Badge variant="outline" className="text-[10px]">{habit.xp_reward} XP</Badge>
-                      {habit.streak > 0 && <span className="text-[10px] text-muted-foreground">🔥{habit.streak}</span>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <DayDetailContent
+            selectedDay={selectedDay}
+            selectedDayTasks={selectedDayTasks}
+            habits={habits}
+            completedHabits={completedHabits}
+            user={user}
+            TaskCard={TaskCard}
+          />
         </DialogContent>
       </Dialog>
 
