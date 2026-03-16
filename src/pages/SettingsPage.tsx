@@ -47,12 +47,9 @@ export default function SettingsPage() {
   }, [searchParams]);
 
   const handleCheckout = async () => {
-    if (!session?.access_token) return;
     setCheckoutLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const { data, error } = await supabase.functions.invoke("create-checkout");
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
@@ -65,12 +62,9 @@ export default function SettingsPage() {
   };
 
   const handleManageSubscription = async () => {
-    if (!session?.access_token) return;
     setPortalLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("customer-portal", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
