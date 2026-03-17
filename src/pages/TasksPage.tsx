@@ -127,6 +127,77 @@ function DayDetailHabits({ selectedDay, selectedDayTasks, habits, todayCompleted
   );
 }
 
+// Task Form Component (outside main component to prevent remounting on every keystroke)
+const TaskForm = ({ values, onChange, onSubmit, submitLabel }: {
+  values: { title: string; description?: string; priority: string; xp_reward: number; estimated_minutes: number | null; due_date: string | Date | null | undefined };
+  onChange: (v: any) => void;
+  onSubmit: () => void;
+  submitLabel: string;
+}) => (
+  <div className="space-y-5">
+    <div className="space-y-2">
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Título da tarefa</Label>
+      <Input value={values.title} onChange={(e) => onChange({ ...values, title: e.target.value })}
+        className="bg-secondary border-border h-11" placeholder="O que precisa ser feito?" />
+    </div>
+    <div className="space-y-2">
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Descrição <span className="text-muted-foreground/50">(opcional)</span></Label>
+      <textarea value={values.description || ""} onChange={(e) => onChange({ ...values, description: e.target.value })}
+        className="flex min-h-[60px] w-full rounded-md border border-input bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        placeholder="Detalhes adicionais sobre a tarefa..." rows={2} />
+    </div>
+    <div className="space-y-2">
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Prioridade</Label>
+      <div className="grid grid-cols-4 gap-2">
+        {Object.entries(priorityConfig).map(([key, cfg]) => (
+          <button key={key} type="button" onClick={() => onChange({ ...values, priority: key })}
+            className={cn(
+              "p-2.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-1.5 justify-center",
+              values.priority === key
+                ? `${cfg.color} border-current shadow-sm`
+                : "border-border bg-secondary/50 text-muted-foreground hover:border-border/80"
+            )}>
+            <span className={cn("h-2 w-2 rounded-full", cfg.dot)} />
+            {cfg.label}
+          </button>
+        ))}
+      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-2">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">XP Recompensa</Label>
+        <Input type="number" value={values.xp_reward} onChange={(e) => onChange({ ...values, xp_reward: Number(e.target.value) })} className="bg-secondary border-border" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Tempo (min)</Label>
+        <Input type="number" value={values.estimated_minutes || ""} onChange={(e) => onChange({ ...values, estimated_minutes: e.target.value ? Number(e.target.value) : null })} className="bg-secondary border-border" placeholder="30" />
+      </div>
+    </div>
+    <div className="space-y-2">
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Data de entrega</Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className={cn("w-full justify-start text-left font-normal bg-secondary border-border h-11", !values.due_date && "text-muted-foreground")}>
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {values.due_date
+              ? format(typeof values.due_date === "string" ? new Date(values.due_date + "T12:00:00") : values.due_date, "dd/MM/yyyy")
+              : "Selecionar data"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar mode="single"
+            selected={values.due_date ? (typeof values.due_date === "string" ? new Date(values.due_date + "T12:00:00") : values.due_date) : undefined}
+            onSelect={(d) => onChange({ ...values, due_date: d ? format(d, "yyyy-MM-dd") : null })}
+            initialFocus className="p-3 pointer-events-auto" />
+        </PopoverContent>
+      </Popover>
+    </div>
+    <Button onClick={onSubmit} className="w-full h-11 font-semibold gap-2">
+      <CheckSquare className="h-4 w-4" /> {submitLabel}
+    </Button>
+  </div>
+);
+
 export default function TasksPage() {
   const { user } = useAuth();
   const { canCreate } = useSubscription();
