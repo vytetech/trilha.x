@@ -138,6 +138,7 @@ export default function TasksPage() {
   const [editDialog, setEditDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [newTaskXP, setNewTaskXP] = useState("10");
   const [newTaskMinutes, setNewTaskMinutes] = useState("");
@@ -183,11 +184,12 @@ export default function TasksPage() {
     }
     await supabase.from("tasks").insert({
       user_id: user.id, title: newTaskTitle, priority: newTaskPriority,
+      description: newTaskDescription.trim() || null,
       xp_reward: Number(newTaskXP) || 10,
       estimated_minutes: newTaskMinutes ? Number(newTaskMinutes) : null,
       due_date: newTaskDueDate ? format(newTaskDueDate, "yyyy-MM-dd") : null,
     });
-    setNewTaskTitle(""); setNewTaskPriority("medium"); setNewTaskXP("10"); setNewTaskMinutes(""); setNewTaskDueDate(undefined);
+    setNewTaskTitle(""); setNewTaskDescription(""); setNewTaskPriority("medium"); setNewTaskXP("10"); setNewTaskMinutes(""); setNewTaskDueDate(undefined);
     setDialogOpen(false);
     fetchData();
     toast({ title: "Tarefa criada! ✅" });
@@ -196,7 +198,7 @@ export default function TasksPage() {
   const updateTask = async () => {
     if (!editingTask) return;
     await supabase.from("tasks").update({
-      title: editingTask.title, priority: editingTask.priority,
+      title: editingTask.title, description: editingTask.description || null, priority: editingTask.priority,
       xp_reward: editingTask.xp_reward, estimated_minutes: editingTask.estimated_minutes,
       due_date: editingTask.due_date,
     }).eq("id", editingTask.id);
@@ -261,7 +263,7 @@ export default function TasksPage() {
 
   // Task Form Component
   const TaskForm = ({ values, onChange, onSubmit, submitLabel }: {
-    values: { title: string; priority: string; xp_reward: number; estimated_minutes: number | null; due_date: string | Date | null | undefined };
+    values: { title: string; description?: string; priority: string; xp_reward: number; estimated_minutes: number | null; due_date: string | Date | null | undefined };
     onChange: (v: any) => void;
     onSubmit: () => void;
     submitLabel: string;
@@ -271,6 +273,12 @@ export default function TasksPage() {
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Título da tarefa</Label>
         <Input value={values.title} onChange={(e) => onChange({ ...values, title: e.target.value })}
           className="bg-secondary border-border h-11" placeholder="O que precisa ser feito?" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Descrição <span className="text-muted-foreground/50">(opcional)</span></Label>
+        <textarea value={values.description || ""} onChange={(e) => onChange({ ...values, description: e.target.value })}
+          className="flex min-h-[60px] w-full rounded-md border border-input bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          placeholder="Detalhes adicionais sobre a tarefa..." rows={2} />
       </div>
       <div className="space-y-2">
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Prioridade</Label>
@@ -433,8 +441,8 @@ export default function TasksPage() {
             <DialogContent className="bg-card border-border">
               <DialogHeader><DialogTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-primary" /> Criar Tarefa</DialogTitle></DialogHeader>
               <TaskForm
-                values={{ title: newTaskTitle, priority: newTaskPriority, xp_reward: Number(newTaskXP), estimated_minutes: newTaskMinutes ? Number(newTaskMinutes) : null, due_date: newTaskDueDate }}
-                onChange={(v) => { setNewTaskTitle(v.title); setNewTaskPriority(v.priority); setNewTaskXP(String(v.xp_reward)); setNewTaskMinutes(v.estimated_minutes ? String(v.estimated_minutes) : ""); setNewTaskDueDate(v.due_date ? (typeof v.due_date === "string" ? new Date(v.due_date + "T12:00:00") : v.due_date) : undefined); }}
+                values={{ title: newTaskTitle, description: newTaskDescription, priority: newTaskPriority, xp_reward: Number(newTaskXP), estimated_minutes: newTaskMinutes ? Number(newTaskMinutes) : null, due_date: newTaskDueDate }}
+                onChange={(v) => { setNewTaskTitle(v.title); setNewTaskDescription(v.description || ""); setNewTaskPriority(v.priority); setNewTaskXP(String(v.xp_reward)); setNewTaskMinutes(v.estimated_minutes ? String(v.estimated_minutes) : ""); setNewTaskDueDate(v.due_date ? (typeof v.due_date === "string" ? new Date(v.due_date + "T12:00:00") : v.due_date) : undefined); }}
                 onSubmit={createTask} submitLabel="Criar Tarefa"
               />
             </DialogContent>
@@ -448,7 +456,7 @@ export default function TasksPage() {
           <DialogHeader><DialogTitle className="flex items-center gap-2"><Pencil className="h-5 w-5 text-primary" /> Editar Tarefa</DialogTitle></DialogHeader>
           {editingTask && (
             <TaskForm
-              values={{ title: editingTask.title, priority: editingTask.priority, xp_reward: editingTask.xp_reward, estimated_minutes: editingTask.estimated_minutes, due_date: editingTask.due_date }}
+              values={{ title: editingTask.title, description: editingTask.description || "", priority: editingTask.priority, xp_reward: editingTask.xp_reward, estimated_minutes: editingTask.estimated_minutes, due_date: editingTask.due_date }}
               onChange={(v) => setEditingTask({ ...editingTask, ...v })}
               onSubmit={updateTask} submitLabel="Salvar Alterações"
             />
@@ -567,7 +575,7 @@ export default function TasksPage() {
                   </div>
                   <span className="text-[10px] font-mono bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{colTasks.length}</span>
                 </div>
-                <div className="p-3 space-y-2 min-h-[120px]">
+                <div className="p-3 space-y-2 min-h-[120px] max-h-[480px] overflow-y-auto">
                   <AnimatePresence>
                     {colTasks.map((task) => <TaskCard key={task.id} task={task} />)}
                   </AnimatePresence>
