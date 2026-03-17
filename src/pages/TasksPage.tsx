@@ -275,6 +275,12 @@ export default function TasksPage() {
           className="bg-secondary border-border h-11" placeholder="O que precisa ser feito?" />
       </div>
       <div className="space-y-2">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Descrição <span className="text-muted-foreground/50">(opcional)</span></Label>
+        <textarea value={values.description || ""} onChange={(e) => onChange({ ...values, description: e.target.value })}
+          className="flex min-h-[60px] w-full rounded-md border border-input bg-secondary px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          placeholder="Detalhes adicionais sobre a tarefa..." rows={2} />
+      </div>
+      <div className="space-y-2">
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Prioridade</Label>
         <div className="grid grid-cols-4 gap-2">
           {Object.entries(priorityConfig).map(([key, cfg]) => (
