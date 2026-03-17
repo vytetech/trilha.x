@@ -229,7 +229,7 @@ export default function TasksPage() {
     if (!user) return;
     const today = new Date().toISOString().split("T")[0];
     const [tasksRes, habitsRes, logsRes] = await Promise.all([
-      supabase.from("tasks").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("tasks").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
       supabase.from("habits").select("*").eq("user_id", user.id).eq("is_active", true),
       supabase.from("habit_logs").select("habit_id").eq("user_id", user.id).eq("completed_at", today),
     ]);
