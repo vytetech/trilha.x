@@ -263,7 +263,7 @@ export default function TasksPage() {
 
   // Task Form Component
   const TaskForm = ({ values, onChange, onSubmit, submitLabel }: {
-    values: { title: string; priority: string; xp_reward: number; estimated_minutes: number | null; due_date: string | Date | null | undefined };
+    values: { title: string; description?: string; priority: string; xp_reward: number; estimated_minutes: number | null; due_date: string | Date | null | undefined };
     onChange: (v: any) => void;
     onSubmit: () => void;
     submitLabel: string;
