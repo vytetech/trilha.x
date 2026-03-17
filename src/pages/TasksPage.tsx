@@ -138,6 +138,7 @@ export default function TasksPage() {
   const [editDialog, setEditDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [newTaskXP, setNewTaskXP] = useState("10");
   const [newTaskMinutes, setNewTaskMinutes] = useState("");
