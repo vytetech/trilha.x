@@ -336,6 +336,32 @@ export default function TasksPage() {
   const openDayDetail = (day: Date) => { setSelectedDay(day); setDayDetailOpen(true); };
   const selectedDayTasks = selectedDay ? getTasksForDay(selectedDay) : [];
 
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(t => {
+      if (filterPriority !== "all" && t.priority !== filterPriority) return false;
+      if (filterSearch && !t.title.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+      return true;
+    });
+  }, [tasks, filterPriority, filterSearch]);
+
+  const hasActiveFilters = filterPriority !== "all" || filterSearch.length > 0;
+
+  const onDragEnd = useCallback(async (result: DropResult) => {
+    const { draggableId, destination } = result;
+    if (!destination) return;
+    const newStatus = destination.droppableId;
+    const task = tasks.find(t => t.id === draggableId);
+    if (!task || task.status === newStatus) return;
+    setTasks(prev => prev.map(t => t.id === draggableId ? { ...t, status: newStatus } : t));
+    await supabase.from("tasks").update({ status: newStatus }).eq("id", draggableId);
+    if (newStatus === "done" && task) {
+      await addXpToProfile(task.xp_reward);
+      setXpPopup({ amount: task.xp_reward, id: draggableId });
+      setTimeout(() => setXpPopup(null), 1800);
+      toast({ title: `+${task.xp_reward} XP! Tarefa concluída 🎉` });
+    }
+    fetchData();
+  }, [tasks, user]);
 
 
   // Task Card Component
