@@ -332,7 +332,7 @@ export default function TasksPage() {
   const openDayDetail = (day: Date) => { setSelectedDay(day); setDayDetailOpen(true); };
   const selectedDayTasks = selectedDay ? getTasksForDay(selectedDay) : [];
 
-  // TaskForm moved outside component - use TaskFormComponent below
+
 
   // Task Card Component
   const TaskCard = ({ task, showActions = true }: { task: Task; showActions?: boolean }) => {
