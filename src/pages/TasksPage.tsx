@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
   CheckSquare, Plus, Flame, Clock, Zap, Trash2, Star, Pencil,
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, Target,
-  ArrowRight, ArrowLeft, Trophy, BarChart3, ListChecks, LayoutGrid
+  ArrowRight, ArrowLeft, Trophy, BarChart3, ListChecks, LayoutGrid,
+  Filter, X, GripVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
