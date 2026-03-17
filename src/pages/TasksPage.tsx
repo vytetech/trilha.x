@@ -575,7 +575,7 @@ export default function TasksPage() {
                   </div>
                   <span className="text-[10px] font-mono bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{colTasks.length}</span>
                 </div>
-                <div className="p-3 space-y-2 min-h-[120px]">
+                <div className="p-3 space-y-2 min-h-[120px] max-h-[480px] overflow-y-auto">
                   <AnimatePresence>
                     {colTasks.map((task) => <TaskCard key={task.id} task={task} />)}
                   </AnimatePresence>
