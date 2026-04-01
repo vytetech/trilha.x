@@ -556,9 +556,10 @@ export default function FinancePage() {
       </div>
 
       <Tabs defaultValue="resumo">
-        <TabsList className="bg-secondary border border-border">
+        <TabsList className="bg-secondary border border-border flex-wrap">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="transacoes">Transações</TabsTrigger>
+          <TabsTrigger value="faturas">Contas a Pagar</TabsTrigger>
           <TabsTrigger value="cartoes">Cartões</TabsTrigger>
           <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
         </TabsList>
