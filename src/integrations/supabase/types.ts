@@ -41,6 +41,51 @@ export type Database = {
         }
         Relationships: []
       }
+      bills: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          is_paid: boolean
+          is_recurring: boolean
+          paid_at: string | null
+          recurring_end_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          is_paid?: boolean
+          is_recurring?: boolean
+          paid_at?: string | null
+          recurring_end_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          is_paid?: boolean
+          is_recurring?: boolean
+          paid_at?: string | null
+          recurring_end_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           category: string

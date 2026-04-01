@@ -41,6 +41,18 @@ interface Transaction {
   is_recurring: boolean;
 }
 
+interface Bill {
+  id: string;
+  description: string;
+  amount: number;
+  due_date: string;
+  category: string;
+  is_recurring: boolean;
+  recurring_end_date: string | null;
+  is_paid: boolean;
+  paid_at: string | null;
+}
+
 interface Budget {
   id: string;
   category: string;
@@ -96,13 +108,16 @@ export default function FinancePage() {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCardType[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
+  const [billDialogOpen, setBillDialogOpen] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [form, setForm] = useState({ type: "expense", amount: "", category: "Outros", description: "", date: new Date().toISOString().split("T")[0], payment_method: "", payment_status: "paid", due_date: "", credit_card_id: "", installments: "1", is_recurring: false });
   const [budgetForm, setBudgetForm] = useState({ category: "Alimentação", limit: "" });
   const [cardForm, setCardForm] = useState({ name: "", last_four: "", brand: "Visa", credit_limit: "", closing_day: "1", due_day: "10" });
+  const [billForm, setBillForm] = useState({ description: "", amount: "", due_date: "", category: "Outros", is_recurring: false, recurring_end_date: "" });
 
   const now = new Date();
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
@@ -127,16 +142,18 @@ export default function FinancePage() {
     const nextMonth = viewMonth + 1 > 12 ? 1 : viewMonth + 1;
     const nextYear = viewMonth + 1 > 12 ? viewYear + 1 : viewYear;
     const endDate = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
-    const [txRes, budgetRes, allTxRes, cardsRes] = await Promise.all([
+    const [txRes, budgetRes, allTxRes, cardsRes, billsRes] = await Promise.all([
       supabase.from("transactions").select("*").eq("user_id", user.id).gte("transaction_date", startDate).lt("transaction_date", endDate).order("transaction_date", { ascending: false }),
       supabase.from("budgets").select("*").eq("user_id", user.id).eq("month", viewMonth).eq("year", viewYear),
       supabase.from("transactions").select("*").eq("user_id", user.id).order("transaction_date", { ascending: true }),
       supabase.from("credit_cards").select("*").eq("user_id", user.id).eq("is_active", true).order("created_at", { ascending: true }),
+      supabase.from("bills").select("*").eq("user_id", user.id).gte("due_date", startDate).lt("due_date", endDate).order("due_date", { ascending: true }),
     ]);
     if (txRes.data) setTransactions(txRes.data);
     if (budgetRes.data) setBudgets(budgetRes.data);
     if (allTxRes.data) setAllTransactions(allTxRes.data);
     if (cardsRes.data) setCreditCards(cardsRes.data);
+    if (billsRes.data) setBills(billsRes.data as Bill[]);
   };
 
   useEffect(() => { fetchData(); }, [user, viewMonth, viewYear]);
@@ -382,6 +399,49 @@ export default function FinancePage() {
     fetchData();
   };
 
+  const createBill = async () => {
+    if (!user || !billForm.amount || !billForm.description || !billForm.due_date) return;
+    await supabase.from("bills").insert({
+      user_id: user.id,
+      description: billForm.description,
+      amount: Number(billForm.amount),
+      due_date: billForm.due_date,
+      category: billForm.category,
+      is_recurring: billForm.is_recurring,
+      recurring_end_date: billForm.is_recurring && billForm.recurring_end_date ? billForm.recurring_end_date : null,
+    } as any);
+    setBillForm({ description: "", amount: "", due_date: "", category: "Outros", is_recurring: false, recurring_end_date: "" });
+    setBillDialogOpen(false);
+    fetchData();
+    toast({ title: "Conta adicionada! 📄" });
+  };
+
+  const payBill = async (bill: Bill) => {
+    if (!user) return;
+    // Create transaction
+    await supabase.from("transactions").insert({
+      user_id: user.id,
+      type: "expense",
+      amount: bill.amount,
+      category: bill.category,
+      description: bill.description,
+      transaction_date: new Date().toISOString().split("T")[0],
+      payment_status: "paid",
+      due_date: bill.due_date,
+      is_recurring: bill.is_recurring,
+    });
+    // Mark bill as paid
+    await supabase.from("bills").update({ is_paid: true, paid_at: new Date().toISOString() } as any).eq("id", bill.id);
+    fetchData();
+    toast({ title: `${bill.description} paga! ✅` });
+  };
+
+  const deleteBill = async (id: string) => {
+    await supabase.from("bills").delete().eq("id", id);
+    fetchData();
+    toast({ title: "Conta removida" });
+  };
+
   const totalBudgetLimit = budgets.reduce((a, b) => a + Number(b.monthly_limit), 0);
   const totalBudgetSpent = budgets.reduce((a, b) => {
     const spent = expenseTxs.filter(t => t.category === b.category).reduce((s, t) => s + Number(t.amount), 0);
@@ -496,9 +556,10 @@ export default function FinancePage() {
       </div>
 
       <Tabs defaultValue="resumo">
-        <TabsList className="bg-secondary border border-border">
+        <TabsList className="bg-secondary border border-border flex-wrap">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="transacoes">Transações</TabsTrigger>
+          <TabsTrigger value="faturas">Contas a Pagar</TabsTrigger>
           <TabsTrigger value="cartoes">Cartões</TabsTrigger>
           <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
         </TabsList>
@@ -882,6 +943,134 @@ export default function FinancePage() {
           </div>
         </TabsContent>
 
+        {/* ========== CONTAS A PAGAR ========== */}
+        <TabsContent value="faturas" className="mt-4 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold text-foreground flex items-center gap-2"><Receipt className="h-5 w-5 text-primary" /> Contas do Mês</h3>
+            <Dialog open={billDialogOpen} onOpenChange={setBillDialogOpen}>
+              <DialogTrigger asChild><Button variant="outline" size="sm" className="gap-2"><Plus className="h-4 w-4" /> Nova Conta</Button></DialogTrigger>
+              <DialogContent className="bg-card border-border">
+                <DialogHeader><DialogTitle>Nova Conta a Pagar</DialogTitle></DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2"><Label>Descrição</Label><Input value={billForm.description} onChange={(e) => setBillForm({ ...billForm, description: e.target.value })} className="bg-secondary border-border" placeholder="Ex: Aluguel, Internet, Luz..." /></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2"><Label>Valor (R$)</Label><Input type="number" value={billForm.amount} onChange={(e) => setBillForm({ ...billForm, amount: e.target.value })} className="bg-secondary border-border" placeholder="0,00" /></div>
+                    <div className="space-y-2"><Label>Vencimento</Label><Input type="date" value={billForm.due_date} onChange={(e) => setBillForm({ ...billForm, due_date: e.target.value })} className="bg-secondary border-border" /></div>
+                  </div>
+                  <div className="space-y-2"><Label>Categoria</Label>
+                    <Select value={billForm.category} onValueChange={(v) => setBillForm({ ...billForm, category: v })}>
+                      <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                      <SelectContent>{categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
+                    <div className="flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{billForm.is_recurring ? "Recorrente" : "Única"}</p>
+                        <p className="text-[10px] text-muted-foreground">{billForm.is_recurring ? "Repete todo mês" : "Conta pontual"}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant={!billForm.is_recurring ? "default" : "outline"} className="text-xs h-7 px-2.5" onClick={() => setBillForm({ ...billForm, is_recurring: false, recurring_end_date: "" })}>Única</Button>
+                      <Button size="sm" variant={billForm.is_recurring ? "default" : "outline"} className="text-xs h-7 px-2.5" onClick={() => setBillForm({ ...billForm, is_recurring: true })}>Recorrente</Button>
+                    </div>
+                  </div>
+                  {billForm.is_recurring && (
+                    <div className="space-y-2">
+                      <Label>Recorrente até (opcional)</Label>
+                      <Input type="date" value={billForm.recurring_end_date} onChange={(e) => setBillForm({ ...billForm, recurring_end_date: e.target.value })} className="bg-secondary border-border" />
+                      <p className="text-[10px] text-muted-foreground">Deixe vazio se for por tempo indeterminado</p>
+                    </div>
+                  )}
+                  <Button onClick={createBill} className="w-full">Adicionar Conta</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Summary cards */}
+          {(() => {
+            const unpaidBills = bills.filter(b => !b.is_paid);
+            const paidBills = bills.filter(b => b.is_paid);
+            const totalUnpaid = unpaidBills.reduce((a, b) => a + Number(b.amount), 0);
+            const totalPaidBills = paidBills.reduce((a, b) => a + Number(b.amount), 0);
+            const overdueBills = unpaidBills.filter(b => new Date(b.due_date) < now);
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-destructive/10"><Clock className="h-5 w-5 text-destructive" /></div>
+                  <div><p className="text-xs text-muted-foreground">A Pagar</p><p className="font-bold text-foreground font-mono">{fmt(totalUnpaid)}</p><p className="text-[10px] text-muted-foreground">{unpaidBills.length} conta(s)</p></div>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10"><CheckCircle2 className="h-5 w-5 text-primary" /></div>
+                  <div><p className="text-xs text-muted-foreground">Pagas</p><p className="font-bold text-foreground font-mono">{fmt(totalPaidBills)}</p><p className="text-[10px] text-muted-foreground">{paidBills.length} conta(s)</p></div>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${overdueBills.length > 0 ? "bg-destructive/10" : "bg-primary/10"}`}>
+                    <AlertCircle className={`h-5 w-5 ${overdueBills.length > 0 ? "text-destructive" : "text-primary"}`} />
+                  </div>
+                  <div><p className="text-xs text-muted-foreground">Atrasadas</p><p className="font-bold text-foreground font-mono">{overdueBills.length}</p><p className="text-[10px] text-muted-foreground">{overdueBills.length > 0 ? "Atenção!" : "Tudo em dia ✅"}</p></div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {bills.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Receipt className="h-14 w-14 mx-auto mb-4 opacity-20" />
+              <p className="text-lg font-medium mb-1">Nenhuma conta cadastrada</p>
+              <p className="text-sm opacity-70">Adicione suas contas do mês para controlar os pagamentos.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {bills.map((bill) => {
+                const isOverdue = !bill.is_paid && new Date(bill.due_date) < now;
+                const daysUntilDue = Math.ceil((new Date(bill.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                return (
+                  <div key={bill.id} className={`flex items-center justify-between p-4 rounded-lg border bg-card group hover:border-primary/20 transition-colors ${isOverdue ? "border-destructive/40" : bill.is_paid ? "border-primary/20 opacity-70" : "border-border"}`}>
+                    <div className="flex items-center gap-3">
+                      {bill.is_paid ? <CheckCircle2 className="h-5 w-5 text-primary" /> : isOverdue ? <AlertCircle className="h-5 w-5 text-destructive" /> : <Clock className="h-5 w-5 text-muted-foreground" />}
+                      <div>
+                        <p className={`text-sm font-medium ${bill.is_paid ? "line-through text-muted-foreground" : "text-foreground"}`}>{bill.description}</p>
+                        <div className="flex flex-wrap gap-2 mt-0.5 items-center">
+                          <Badge variant="outline" className="text-xs">{bill.category}</Badge>
+                          <span className={`text-xs flex items-center gap-1 ${isOverdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                            <CalendarDays className="h-3 w-3" />
+                            Venc: {new Date(bill.due_date).toLocaleDateString("pt-BR")}
+                            {isOverdue && !bill.is_paid && " (Atrasado!)"}
+                            {!bill.is_paid && !isOverdue && daysUntilDue <= 3 && daysUntilDue >= 0 && ` (${daysUntilDue}d)`}
+                          </span>
+                          {bill.is_recurring && (
+                            <Badge variant="outline" className="text-[10px] gap-1 border-blue-400/30 text-blue-400">
+                              <Layers className="h-2.5 w-2.5" /> Recorrente
+                              {bill.recurring_end_date && ` até ${new Date(bill.recurring_end_date).toLocaleDateString("pt-BR")}`}
+                            </Badge>
+                          )}
+                          {bill.is_paid && (
+                            <Badge className="text-[10px] gap-1 bg-primary/15 text-primary border-primary/30">
+                              <CheckCircle2 className="h-2.5 w-2.5" /> Paga
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold font-mono text-sm text-destructive">{fmt(Number(bill.amount))}</span>
+                      {!bill.is_paid && (
+                        <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => payBill(bill)}>
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Pagar
+                        </Button>
+                      )}
+                      <button onClick={() => deleteBill(bill.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
         {/* ========== CARTÕES DE CRÉDITO ========== */}
         <TabsContent value="cartoes" className="mt-4 space-y-6">
           <div className="flex justify-between items-center">
@@ -960,8 +1149,12 @@ export default function FinancePage() {
                       <p className="text-white/60 text-[10px]">Fatura Atual</p>
                       <p className="font-bold font-mono">{fmt(invoiceTotal)}</p>
                     </div>
+                    <div className="text-center">
+                      <p className="text-white/60 text-[10px]">Disponível</p>
+                      <p className={`font-bold font-mono ${Number(card.credit_limit) - invoiceTotal <= 0 ? "text-red-300" : ""}`}>{fmt(Math.max(0, Number(card.credit_limit) - invoiceTotal))}</p>
+                    </div>
                     <div className="text-right">
-                      <p className="text-white/60 text-[10px]">Limite</p>
+                      <p className="text-white/60 text-[10px]">Limite Total</p>
                       <p className="font-mono">{fmt(Number(card.credit_limit))}</p>
                     </div>
                   </div>
