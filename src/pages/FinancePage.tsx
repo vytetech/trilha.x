@@ -1149,8 +1149,12 @@ export default function FinancePage() {
                       <p className="text-white/60 text-[10px]">Fatura Atual</p>
                       <p className="font-bold font-mono">{fmt(invoiceTotal)}</p>
                     </div>
+                    <div className="text-center">
+                      <p className="text-white/60 text-[10px]">Disponível</p>
+                      <p className={`font-bold font-mono ${Number(card.credit_limit) - invoiceTotal <= 0 ? "text-red-300" : ""}`}>{fmt(Math.max(0, Number(card.credit_limit) - invoiceTotal))}</p>
+                    </div>
                     <div className="text-right">
-                      <p className="text-white/60 text-[10px]">Limite</p>
+                      <p className="text-white/60 text-[10px]">Limite Total</p>
                       <p className="font-mono">{fmt(Number(card.credit_limit))}</p>
                     </div>
                   </div>
