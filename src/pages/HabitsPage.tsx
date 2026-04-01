@@ -227,7 +227,7 @@ export default function HabitsPage() {
       </div>
 
       {/* Weekday selector - shown for custom and weekdays */}
-      {(values.frequency === "custom" || values.frequency === "weekdays") && (
+      {values.frequency === "custom" && (
         <div className="space-y-2">
           <Label>Dias da semana</Label>
           <div className="flex gap-1.5">
