@@ -411,6 +411,8 @@ export default function RankingPage() {
           ))}
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
