@@ -7,6 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const PRICE_TO_PLAN: Record<string, string> = {
+  "price_1T8j6ZBI1DQVqElNYrTu6MPm": "pro",
+  "price_1THkaBBI1DQVqElNoSpDTdOb": "ultimate",
+};
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
@@ -34,8 +39,8 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) {
-      logStep("Auth error (likely expired token)", { message: userError.message });
-      return new Response(JSON.stringify({ error: "Unauthorized: token expired or invalid" }), {
+      logStep("Auth error", { message: userError.message });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
@@ -49,7 +54,6 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
-      // Update profile plan to free
       await supabaseClient.from("profiles").update({ plan: "free" }).eq("user_id", user.id);
       return new Response(JSON.stringify({ subscribed: false, plan: "free" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -61,50 +65,52 @@ serve(async (req) => {
     logStep("Found customer", { customerId });
 
     const activeSubscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
+      customer: customerId, status: "active", limit: 5,
     });
-
     const trialingSubscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "trialing",
-      limit: 1,
+      customer: customerId, status: "trialing", limit: 5,
     });
 
-    const subscriptions = {
-      data: [...activeSubscriptions.data, ...trialingSubscriptions.data],
-    };
+    const allSubs = [...activeSubscriptions.data, ...trialingSubscriptions.data];
 
-    const hasActiveSub = subscriptions.data.length > 0;
-    let subscriptionEnd = null;
-
-    if (hasActiveSub) {
-      const sub = subscriptions.data[0];
-      logStep("Subscription details", { 
-        status: sub.status, 
-        current_period_end: sub.current_period_end,
-        trial_end: sub.trial_end 
+    if (allSubs.length === 0) {
+      logStep("No active subscription");
+      await supabaseClient.from("profiles").update({ plan: "free" }).eq("user_id", user.id);
+      return new Response(JSON.stringify({ subscribed: false, plan: "free" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
       });
+    }
+
+    // Determine best plan from active subscriptions
+    let bestPlan = "pro";
+    let subscriptionEnd: string | null = null;
+
+    for (const sub of allSubs) {
+      const priceId = sub.items.data[0]?.price?.id;
+      const detectedPlan = priceId ? PRICE_TO_PLAN[priceId] : null;
+      logStep("Sub found", { status: sub.status, priceId, detectedPlan });
+
+      if (detectedPlan === "ultimate") {
+        bestPlan = "ultimate";
+      }
+
       try {
         const endTimestamp = sub.current_period_end || sub.trial_end;
         if (endTimestamp && typeof endTimestamp === "number") {
           subscriptionEnd = new Date(endTimestamp * 1000).toISOString();
         }
-      } catch (dateErr) {
-        logStep("Date parsing error, skipping end date", { error: String(dateErr) });
+      } catch (e) {
+        logStep("Date parsing error", { error: String(e) });
       }
-      logStep("Active subscription found", { endDate: subscriptionEnd });
-      // Update profile plan to pro
-      await supabaseClient.from("profiles").update({ plan: "pro" }).eq("user_id", user.id);
-    } else {
-      logStep("No active subscription");
-      await supabaseClient.from("profiles").update({ plan: "free" }).eq("user_id", user.id);
     }
 
+    logStep("Best plan determined", { bestPlan, subscriptionEnd });
+    await supabaseClient.from("profiles").update({ plan: bestPlan }).eq("user_id", user.id);
+
     return new Response(JSON.stringify({
-      subscribed: hasActiveSub,
-      plan: hasActiveSub ? "pro" : "free",
+      subscribed: true,
+      plan: bestPlan,
       subscription_end: subscriptionEnd,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

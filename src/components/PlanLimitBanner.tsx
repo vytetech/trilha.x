@@ -14,7 +14,7 @@ export default function PlanLimitBanner({ resource, currentCount, resourceLabel 
   const { plan, canCreate, getLimit, getRemainder } = useSubscription();
   const navigate = useNavigate();
 
-  if (plan === "pro") return null;
+  if (plan === "ultimate") return null;
 
   const limit = getLimit(resource);
   const remainder = getRemainder(resource, currentCount);
@@ -28,8 +28,8 @@ export default function PlanLimitBanner({ resource, currentCount, resourceLabel 
         {atLimit ? <Lock className="h-4 w-4 text-destructive" /> : <Crown className="h-4 w-4 text-primary" />}
         <span className="text-sm text-foreground">
           {atLimit
-            ? `Limite atingido: ${limit} ${resourceLabel} no plano Free`
-            : `${remainder} ${resourceLabel} restante(s) no plano Free`}
+            ? `Limite atingido: ${limit} ${resourceLabel} no plano ${plan === "free" ? "Free" : "Pro"}`
+            : `${remainder} ${resourceLabel} restante(s) no plano ${plan === "free" ? "Free" : "Pro"}`}
         </span>
       </div>
       <Button size="sm" variant={atLimit ? "default" : "outline"} onClick={() => navigate("/settings?tab=plano")} className="gap-1.5 shrink-0">

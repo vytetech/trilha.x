@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+export type PlanType = "free" | "pro" | "ultimate";
+
 export const PLAN_LIMITS = {
   free: {
     tasks: 5,
@@ -12,6 +14,14 @@ export const PLAN_LIMITS = {
     transactions: 50,
   },
   pro: {
+    tasks: 20,
+    habits: 10,
+    goals: 10,
+    dreams: 10,
+    investments: 20,
+    transactions: 200,
+  },
+  ultimate: {
     tasks: Infinity,
     habits: Infinity,
     goals: Infinity,
@@ -21,8 +31,21 @@ export const PLAN_LIMITS = {
   },
 } as const;
 
+export const PLAN_PRICES = {
+  pro: {
+    price_id: "price_1T8j6ZBI1DQVqElNYrTu6MPm",
+    product_id: "prod_U6x0SW4WVoy9Os",
+    monthly: 19.90,
+  },
+  ultimate: {
+    price_id: "price_1THkaBBI1DQVqElNoSpDTdOb",
+    product_id: "prod_UGH8JV4kAVzjN7",
+    monthly: 39.90,
+  },
+} as const;
+
 interface SubscriptionContextType {
-  plan: "free" | "pro";
+  plan: PlanType;
   subscribed: boolean;
   subscriptionEnd: string | null;
   loading: boolean;
@@ -36,7 +59,7 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
-  const [plan, setPlan] = useState<"free" | "pro">("free");
+  const [plan, setPlan] = useState<PlanType>("free");
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +71,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Supabase client auto-refreshes tokens, no need for manual refreshSession()
       const { data, error } = await supabase.functions.invoke("check-subscription");
 
       if (!error && data) {
@@ -71,7 +93,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   }, [user, session, checkSubscription]);
 
-  // Periodic refresh every 60s
   useEffect(() => {
     if (!user || !session) return;
     const interval = setInterval(checkSubscription, 60000);
