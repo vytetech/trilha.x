@@ -194,7 +194,8 @@ export default function FinancePage() {
     const map: Record<number, { income: number; expense: number }> = {};
     for (let d = 1; d <= daysInMonth; d++) map[d] = { income: 0, expense: 0 };
     regularTransactions.forEach(tx => {
-      const day = new Date(tx.transaction_date).getDate();
+      const day = new Date(tx.transaction_date + "T00:00:00").getDate();
+      if (!map[day]) map[day] = { income: 0, expense: 0 };
       if (tx.type === "expense") map[day].expense += Number(tx.amount);
       else map[day].income += Number(tx.amount);
     });
