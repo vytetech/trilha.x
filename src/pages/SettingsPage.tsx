@@ -46,10 +46,12 @@ export default function SettingsPage() {
     }
   }, [searchParams]);
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (selectedPlan: "pro" | "ultimate" = "pro") => {
     setCheckoutLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan: selectedPlan },
+      });
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
