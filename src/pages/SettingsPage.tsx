@@ -191,7 +191,7 @@ export default function SettingsPage() {
                   <Badge variant="outline" className="text-xs">
                     <Zap className="h-3 w-3 mr-1" /> {profile?.xp || 0} XP
                   </Badge>
-                  <Badge variant="outline" className="text-xs capitalize">{plan === "pro" ? "pro" : "free"}</Badge>
+                  <Badge variant="outline" className="text-xs capitalize">{plan}</Badge>
                 </div>
               </div>
             </div>
