@@ -203,7 +203,6 @@ export default function RankingPage() {
         </TabsContent>
 
         <TabsContent value="pessoal" className="mt-0 space-y-6">
-      </motion.div>
 
       {/* Profile Hero Card */}
       {profile && (
