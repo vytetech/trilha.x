@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Zap,
   CheckSquare,
   Target,
   Wallet,
@@ -23,10 +22,12 @@ import {
   Clock,
   Check,
   X,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
+import logoTrilha from "@/assets/logo-trilha.x.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -131,20 +132,38 @@ const testimonials = [
   {
     name: "Lucas M.",
     role: "Desenvolvedor",
-    text: "Nunca fui tão produtivo. O sistema de XP me motiva a completar tudo.",
+    text: "O TRILHA.X mudou minha rotina. O sistema de XP é viciante e me faz querer concluir tudo no prazo!",
     avatar: "LM",
   },
   {
-    name: "Ana C.",
+    name: "Ana Silva",
     role: "Designer",
-    text: "Finalmente consigo controlar finanças e hábitos no mesmo lugar. Incrível.",
-    avatar: "AC",
+    text: "Interface impecável. VyteTech está de parabéns pelo capricho no visual e na experiência.",
+    avatar: "AS",
   },
   {
-    name: "Pedro S.",
+    name: "Pedro Rocha",
+    role: "Investidor",
+    text: "Finalmente um controle de investimentos que fala a língua de quem quer crescer.",
+    avatar: "PR",
+  },
+  {
+    name: "Carla Dias",
+    role: "Estudante",
+    text: "Minha disciplina subiu 200% com os streaks. Ver a barra de progresso subir é o que eu precisava.",
+    avatar: "CD",
+  },
+  {
+    name: "Marcos V.",
     role: "Empreendedor",
-    text: "O radar de atributos me mostrou onde eu estava falhando. Mudou minha vida.",
-    avatar: "PS",
+    text: "Ferramenta indispensável para quem busca alta performance e gestão de tempo.",
+    avatar: "MV",
+  },
+  {
+    name: "Julia L.",
+    role: "Freelancer",
+    text: "Amo o radar de atributos! Consigo ver exatamente onde preciso focar.",
+    avatar: "JL",
   },
 ];
 
@@ -234,13 +253,18 @@ const plans: Plan[] = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const [isAnnual, setIsAnnual] = useState(false);
+  const [email, setEmail] = useState("");
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const getPrice = (p: Plan) =>
     p.monthlyPrice === 0
       ? "R$ 0"
       : `R$ ${(isAnnual ? p.annualPrice : p.monthlyPrice).toFixed(2).replace(".", ",")}`;
+
   const getPeriod = (p: Plan) =>
     p.monthlyPrice === 0 ? "/mês" : isAnnual ? "/ano" : "/mês";
+
   const getSaving = (p: Plan) =>
     p.monthlyPrice === 0
       ? null
@@ -248,44 +272,44 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <nav className="fixed top-0 w-full z-50 glass-strong">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold gradient-text">TRILHA</span>
+      {/* ── NAVBAR ─────────────────────────────────── */}
+      <nav className="fixed top-0 w-full z-50 glass-strong border-b border-border/40">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+          <button
+            onClick={scrollToTop}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            <img
+              src={logoTrilha}
+              alt="TRILHA.X"
+              className="h-10 w-10 rounded-xl object-cover border-2 border-primary shadow-[0_0_12px_rgba(34,197,94,0.35)]"
+            />
+            <span className="text-2xl font-black gradient-text tracking-tighter uppercase">
+              TRILHA.X
+            </span>
+          </button>
+
+          <div className="hidden md:flex items-center gap-8">
+            {[
+              { label: "Módulos", id: "modules" },
+              { label: "Gamificação", id: "gamification" },
+              { label: "Depoimentos", id: "testimonials" },
+              { label: "Planos", id: "pricing" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() =>
+                  document
+                    .getElementById(item.id)
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
-          <div className="hidden md:flex items-center gap-6">
-            <button
-              onClick={() =>
-                document
-                  .getElementById("modules")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Módulos
-            </button>
-            <button
-              onClick={() =>
-                document
-                  .getElementById("gamification")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Gamificação
-            </button>
-            <button
-              onClick={() =>
-                document
-                  .getElementById("pricing")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Planos
-            </button>
-          </div>
+
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -297,7 +321,7 @@ export default function LandingPage() {
             <Button
               size="sm"
               onClick={() => navigate("/signup")}
-              className="gap-1.5"
+              className="gap-1.5 shadow-lg shadow-primary/20"
             >
               Começar <ArrowRight className="h-3.5 w-3.5" />
             </Button>
@@ -305,8 +329,9 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section className="pt-28 pb-24 px-6 relative">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* ── HERO ───────────────────────────────────── */}
+      <section className="pt-36 pb-28 px-6 relative">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/8 rounded-full blur-[140px] pointer-events-none" />
         <div className="max-w-5xl mx-auto text-center relative">
           <motion.div
             initial="hidden"
@@ -314,8 +339,8 @@ export default function LandingPage() {
             variants={fadeUp}
             custom={0}
           >
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-6 text-xs font-medium px-3 py-1">
-              <Rocket className="h-3 w-3 mr-1.5" /> Plataforma completa de
+            <Badge className="bg-primary/20 text-primary border-primary/30 mb-6 px-4 py-1.5 text-sm">
+              <Rocket className="h-4 w-4 mr-2" /> Plataforma completa de
               evolução pessoal
             </Badge>
           </motion.div>
@@ -324,36 +349,35 @@ export default function LandingPage() {
             animate="visible"
             variants={fadeUp}
             custom={1}
-            className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-foreground leading-[1.1] tracking-tight"
+            className="text-5xl sm:text-6xl md:text-8xl font-black text-foreground leading-[1] tracking-tighter mb-8"
           >
-            Sua vida como um <span className="neon-text">jogo de</span>
-            <br />
-            <span className="neon-text">evolução real</span>
+            Sua vida como um <br />
+            <span className="neon-text">jogo de evolução real</span>
           </motion.h1>
           <motion.p
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             custom={2}
-            className="text-base md:text-lg text-muted-foreground mt-6 max-w-2xl mx-auto leading-relaxed"
+            className="text-lg md:text-xl text-muted-foreground mt-6 max-w-2xl mx-auto leading-relaxed"
           >
-            Organize tarefas, construa hábitos, controle finanças, gerencie
-            investimentos e conquiste metas — tudo em uma plataforma gamificada
-            que te recompensa por cada passo.
+            Organize tarefas, construa hábitos, controle finanças e conquiste
+            metas no <strong className="text-foreground">TRILHA.X</strong>. A
+            experiência definitiva em gamificação de produtividade.
           </motion.p>
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             custom={3}
-            className="flex flex-col sm:flex-row gap-3 justify-center mt-8"
+            className="flex flex-col sm:flex-row gap-4 justify-center mt-10"
           >
             <Button
               size="lg"
               onClick={() => navigate("/signup")}
-              className="gap-2 text-base px-8 h-12 font-semibold"
+              className="text-lg px-10 h-14 font-bold"
             >
-              Começar Grátis <ArrowRight className="h-4 w-4" />
+              Começar Grátis <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"
@@ -363,17 +387,19 @@ export default function LandingPage() {
                   .getElementById("modules")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className="gap-2 text-base px-8 h-12"
+              className="text-lg px-10 h-14"
             >
-              <Eye className="h-4 w-4" /> Ver todos os módulos
+              <Eye className="mr-2 h-5 w-5" /> Ver Módulos
             </Button>
           </motion.div>
+
+          {/* Stats */}
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             custom={4}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-2xl mx-auto"
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 max-w-2xl mx-auto"
           >
             {[
               { value: "9", label: "Módulos completos" },
@@ -382,7 +408,7 @@ export default function LandingPage() {
               { value: "100%", label: "Gamificado" },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <p className="text-2xl md:text-3xl font-bold neon-text font-mono">
+                <p className="text-3xl md:text-4xl font-black neon-text font-mono">
                   {s.value}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
@@ -392,8 +418,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-6 px-6 border-y border-border bg-card/50">
-        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-8">
+      {/* ── TRUST BADGES ───────────────────────────── */}
+      <section className="py-8 px-6 border-y border-border bg-card/50">
+        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-10">
           {[
             { icon: Shield, text: "Dados criptografados" },
             { icon: Smartphone, text: "100% responsivo" },
@@ -404,36 +431,28 @@ export default function LandingPage() {
               key={item.text}
               className="flex items-center gap-2 text-muted-foreground"
             >
-              <item.icon className="h-4 w-4 text-primary/60" />
-              <span className="text-xs font-medium">{item.text}</span>
+              <item.icon className="h-5 w-5 text-primary/70" />
+              <span className="text-sm font-medium">{item.text}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section id="modules" className="py-24 px-6">
+      {/* ── MODULES ────────────────────────────────── */}
+      <section id="modules" className="py-28 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0}
-            className="text-center mb-16"
-          >
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4 text-xs">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary mb-4">
               Funcionalidades
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              Tudo que você precisa para{" "}
-              <span className="neon-text">evoluir</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Tudo para sua <span className="neon-text">evolução</span>
             </h2>
-            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-              9 módulos integrados que trabalham juntos para transformar cada
-              ação em progresso mensurável.
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              9 módulos integrados que transformam cada ação em progresso real.
             </p>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {modules.map((m, i) => (
               <motion.div
                 key={m.title}
@@ -442,23 +461,23 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 hover:bg-card/80 transition-all duration-300"
+                className="group rounded-2xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="rounded-lg bg-primary/10 p-2.5 group-hover:bg-primary/15 transition-colors">
-                    <m.icon className="h-5 w-5 text-primary" />
+                <div className="flex items-start justify-between mb-4">
+                  <div className="rounded-xl bg-primary/10 p-3 text-primary group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                    <m.icon className="h-6 w-6" />
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-[10px] border-border text-muted-foreground"
+                    className="text-[10px] uppercase tracking-widest"
                   >
                     {m.tag}
                   </Badge>
                 </div>
-                <h3 className="font-semibold text-foreground mb-1.5 text-sm">
+                <h3 className="text-lg font-bold text-foreground mb-2">
                   {m.title}
                 </h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {m.desc}
                 </p>
               </motion.div>
@@ -467,32 +486,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── GAMIFICATION ───────────────────────────── */}
       <section
         id="gamification"
-        className="py-24 px-6 border-t border-border relative"
+        className="py-28 px-6 border-t border-border bg-primary/[0.01]"
       >
-        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-[150px] pointer-events-none" />
-        <div className="max-w-6xl mx-auto relative">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0}
-            className="text-center mb-16"
-          >
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4 text-xs">
-              Sistema de Gamificação
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="bg-primary/10 text-primary mb-4">
+              Gamificação
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h2 className="text-4xl md:text-5xl font-bold">
               Cada ação te faz <span className="neon-text">mais forte</span>
             </h2>
-            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-              Um sistema completo de progressão que transforma disciplina em
-              resultados visíveis.
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {gamificationFeatures.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -501,175 +509,150 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="rounded-xl border border-border bg-card p-5 hover:border-primary/20 transition-all"
+                className="rounded-2xl border border-border bg-card/50 p-8 hover:bg-card hover:border-primary/30 transition-all"
               >
-                <span className="text-3xl">{item.icon}</span>
-                <h3 className="font-semibold text-foreground mt-3 mb-1.5 text-sm">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {item.desc}
-                </p>
+                <span className="text-4xl block mb-4">{item.icon}</span>
+                <h3 className="font-bold text-xl mb-3">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 border-t border-border">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0}
-            className="text-center mb-16"
-          >
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4 text-xs">
-              Como funciona
+      {/* ── HOW IT WORKS ───────────────────────────── */}
+      <section className="py-28 px-6 relative overflow-hidden bg-card/20 border-y border-border">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-primary/10 text-primary border-none">
+              Como Funciona
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h2 className="text-4xl md:text-5xl font-bold">
               3 passos para <span className="neon-text">começar</span>
             </h2>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                step: "01",
-                title: "Crie sua conta",
-                desc: "Cadastro rápido e gratuito. Sem cartão de crédito.",
-                icon: Users,
-              },
-              {
-                step: "02",
-                title: "Configure seus módulos",
-                desc: "Adicione tarefas, hábitos, metas e controle financeiro.",
-                icon: Calendar,
-              },
-              {
-                step: "03",
-                title: "Evolua diariamente",
-                desc: "Ganhe XP, suba de nível e acompanhe seu progresso.",
-                icon: Rocket,
-              },
-            ].map((s, i) => (
-              <motion.div
-                key={s.step}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={i}
-                className="text-center"
-              >
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 mb-4">
-                  <s.icon className="h-6 w-6 text-primary" />
+            <p className="text-muted-foreground mt-4">
+              Siga o fluxo para atingir o próximo nível.
+            </p>
+          </div>
+          <div className="relative">
+            <div className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent z-0" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
+              {[
+                {
+                  step: "01",
+                  icon: Users,
+                  title: "Crie sua conta",
+                  desc: "Acesso imediato e simplificado ao ecossistema TRILHA.X.",
+                },
+                {
+                  step: "02",
+                  icon: Calendar,
+                  title: "Defina seus Pilares",
+                  desc: "Personalize seus hábitos, metas financeiras e tarefas diárias.",
+                },
+                {
+                  step: "03",
+                  icon: Rocket,
+                  title: "Evolua e Conquiste",
+                  desc: "Receba XP em tempo real e visualize sua evolução nos gráficos.",
+                },
+              ].map((s, i) => (
+                <div
+                  key={s.step}
+                  className="flex flex-col items-center text-center"
+                >
+                  <div className="relative mb-8">
+                    <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-primary text-primary-foreground font-black flex items-center justify-center text-lg shadow-lg z-20">
+                      {s.step}
+                    </div>
+                    <div className="w-24 h-24 rounded-2xl bg-background border-2 border-primary/50 flex items-center justify-center shadow-xl hover:border-primary transition-all duration-500">
+                      <s.icon className="h-10 w-10 text-primary" />
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3">{s.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed max-w-[280px]">
+                    {s.desc}
+                  </p>
                 </div>
-                <span className="block text-xs font-mono text-primary mb-2">
-                  Passo {s.step}
-                </span>
-                <h3 className="font-semibold text-foreground mb-1">
-                  {s.title}
-                </h3>
-                <p className="text-xs text-muted-foreground">{s.desc}</p>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-6 border-t border-border">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0}
-            className="text-center mb-12"
-          >
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4 text-xs">
+      {/* ── TESTIMONIALS ───────────────────────────── */}
+      <section
+        id="testimonials"
+        className="py-28 px-6 bg-primary/[0.01] border-b border-border overflow-hidden"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-primary/10 text-primary border-none">
               Depoimentos
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              Quem usa, <span className="neon-text">evolui</span>
+            <h2 className="text-4xl md:text-5xl font-bold">
+              Quem usa <span className="neon-text">evolui</span>
             </h2>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <p className="text-muted-foreground mt-4">
+              Acompanhe quem já está no próximo nível
+            </p>
+          </div>
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
             {testimonials.map((t, i) => (
               <motion.div
-                key={t.name}
+                key={i}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="rounded-xl border border-border bg-card p-5"
+                className="break-inside-avoid bg-card/60 backdrop-blur-sm border border-border p-8 rounded-3xl hover:border-primary/40 transition-all cursor-default group"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-black text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     {t.avatar}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <h4 className="font-bold text-sm text-foreground">
                       {t.name}
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+                      {t.role}
                     </p>
-                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  </div>
+                  <div className="ml-auto flex gap-0.5">
+                    {[...Array(5)].map((_, j) => (
+                      <Star
+                        key={j}
+                        className="h-3 w-3 fill-primary text-primary"
+                      />
+                    ))}
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed italic font-medium">
                   "{t.text}"
                 </p>
-                <div className="flex gap-0.5 mt-3">
-                  {[...Array(5)].map((_, j) => (
-                    <Star
-                      key={j}
-                      className="h-3.5 w-3.5 fill-primary text-primary"
-                    />
-                  ))}
-                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section
-        id="pricing"
-        className="py-24 px-6 border-t border-border relative"
-      >
-        <div className="absolute top-0 right-1/4 w-[300px] h-[300px] bg-primary/3 rounded-full blur-[120px] pointer-events-none" />
-        <div className="max-w-6xl mx-auto relative">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0}
-            className="text-center mb-10"
-          >
-            <Badge className="bg-primary/10 text-primary border-primary/20 mb-4 text-xs">
-              Planos
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              Escolha seu <span className="neon-text">caminho</span>
-            </h2>
-            <p className="text-muted-foreground mt-3">
-              Comece grátis. Evolua quando quiser.
-            </p>
-          </motion.div>
+      {/* ── PRICING ────────────────────────────────── */}
+      <section id="pricing" className="py-28 px-6 border-t border-border">
+        <div className="max-w-6xl mx-auto text-center">
+          <Badge className="bg-primary/10 text-primary mb-4">Planos</Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Escolha seu <span className="neon-text">caminho</span>
+          </h2>
+          <p className="text-muted-foreground mb-10">
+            Comece grátis. Evolua quando quiser.
+          </p>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={1}
-            className="flex items-center justify-center gap-4 mb-12"
-          >
+          {/* Toggle */}
+          <div className="flex items-center justify-center gap-4 mb-16">
             <span
-              className={`text-sm font-medium transition-colors ${!isAnnual ? "text-foreground" : "text-muted-foreground"}`}
+              className={`text-sm font-medium transition-colors ${!isAnnual ? "text-foreground font-bold" : "text-muted-foreground"}`}
             >
               Mensal
             </span>
@@ -683,17 +666,18 @@ export default function LandingPage() {
             </button>
             <div className="flex items-center gap-2">
               <span
-                className={`text-sm font-medium transition-colors ${isAnnual ? "text-foreground" : "text-muted-foreground"}`}
+                className={`text-sm font-medium transition-colors ${isAnnual ? "text-foreground font-bold" : "text-muted-foreground"}`}
               >
                 Anual
               </span>
-              <Badge className="bg-primary/20 text-primary border-none text-[10px] px-2 py-0.5">
+              <Badge className="bg-primary text-primary-foreground text-[10px]">
                 2 meses grátis
               </Badge>
             </div>
-          </motion.div>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
@@ -702,41 +686,54 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className={`rounded-xl border p-6 relative flex flex-col ${plan.highlight ? "border-primary/40 bg-primary/[0.03] shadow-lg shadow-primary/10" : "border-border bg-card"}`}
+                className={`rounded-3xl border p-8 flex flex-col text-left transition-all relative ${
+                  plan.highlight
+                    ? "border-primary bg-primary/[0.03] scale-105 shadow-2xl shadow-primary/10"
+                    : "border-border bg-card"
+                }`}
               >
+                {/* Badge do plano */}
                 {plan.badge && (
                   <Badge
-                    className={`absolute -top-2.5 left-4 text-[10px] px-2.5 ${plan.highlight ? "bg-primary text-primary-foreground" : "bg-muted text-foreground border border-border"}`}
+                    className={`absolute -top-3 left-6 text-[10px] px-3 py-1 ${
+                      plan.highlight
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground border border-border"
+                    }`}
                   >
                     {plan.badge}
                   </Badge>
                 )}
-                <div className="mb-5">
-                  <h3 className="text-xl font-bold text-foreground">
-                    {plan.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {plan.desc}
-                  </p>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-foreground">
-                      {getPrice(plan)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {getPeriod(plan)}
+
+                <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {plan.desc}
+                </p>
+
+                {/* Preço */}
+                <div className="mb-2">
+                  <span className="text-5xl font-black">{getPrice(plan)}</span>
+                  <span className="text-muted-foreground text-sm ml-1">
+                    {getPeriod(plan)}
+                  </span>
+                </div>
+
+                {/* Economia anual */}
+                {isAnnual && plan.monthlyPrice !== 0 ? (
+                  <div className="mb-6">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-1">
+                      🎉 {getSaving(plan)} comparado ao mensal
                     </span>
                   </div>
-                  {isAnnual && plan.monthlyPrice !== 0 && (
-                    <p className="text-xs text-primary mt-1 font-medium">
-                      {getSaving(plan)} comparado ao mensal
-                    </p>
-                  )}
-                </div>
-                <ul className="space-y-2.5 flex-1 mb-6">
+                ) : (
+                  <div className="mb-6 h-7" />
+                )}
+
+                <ul className="space-y-3.5 flex-1 mb-8">
                   {plan.features.map((f) => (
                     <li
                       key={f.text}
-                      className={`text-sm flex items-center gap-2.5 ${f.included ? "text-foreground" : "text-muted-foreground line-through opacity-40"}`}
+                      className={`text-sm flex items-center gap-3 ${f.included ? "text-foreground" : "text-muted-foreground/40 line-through"}`}
                     >
                       {f.included ? (
                         <Check className="h-4 w-4 text-primary shrink-0" />
@@ -747,135 +744,232 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
+
                 <Button
-                  className="w-full"
                   variant={plan.highlight ? "default" : "outline"}
                   size="lg"
+                  className="w-full font-bold py-6"
                   onClick={() => navigate("/signup")}
                 >
                   {plan.cta}
                 </Button>
+
                 {plan.monthlyPrice === 0 && (
-                  <p className="text-center text-xs text-muted-foreground mt-2">
+                  <p className="text-center text-xs text-muted-foreground mt-3">
                     Sem cartão de crédito
                   </p>
                 )}
               </motion.div>
             ))}
           </div>
-          <motion.p
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={4}
-            className="text-center text-xs text-muted-foreground mt-8 flex items-center justify-center gap-1.5"
-          >
-            <Shield className="h-3.5 w-3.5 text-primary/60" /> Cancele quando
-            quiser · Sem taxas ocultas · Pagamento seguro via Stripe
-          </motion.p>
+
+          <p className="text-xs text-muted-foreground mt-10 flex items-center justify-center gap-1.5">
+            <Shield className="h-3.5 w-3.5 text-primary/60" />
+            Cancele quando quiser · Sem taxas ocultas · Pagamento seguro via
+            Stripe
+          </p>
         </div>
       </section>
 
-      <section className="py-24 px-6 border-t border-border relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+      {/* ── FINAL CTA ──────────────────────────────── */}
+      <section className="py-28 px-6 border-t border-border relative overflow-hidden bg-card/10">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.03] to-transparent pointer-events-none" />
         <div className="max-w-2xl mx-auto text-center relative">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={0}
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-8">
+            <img
+              src={logoTrilha}
+              alt="TRILHA.X"
+              className="h-20 w-20 rounded-2xl object-cover border-2 border-primary/60 shadow-lg shadow-primary/20"
+            />
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-foreground mb-4">
+            Pronto para <span className="neon-text">evoluir</span>?
+          </h2>
+          <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg">
+            Junte-se ao TRILHA.X e transforme cada dia em progresso real. Comece
+            gratuitamente.
+          </p>
+          <Button
+            size="lg"
+            onClick={() => navigate("/signup")}
+            className="text-lg px-12 h-14 font-bold shadow-xl shadow-primary/20"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-6">
-              <Zap className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Pronto para <span className="neon-text">evoluir</span>?
-            </h2>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Junte-se ao TRILHA e transforme cada dia em progresso real. Comece
-              gratuitamente, sem compromisso.
-            </p>
-            <Button
-              size="lg"
-              onClick={() => navigate("/signup")}
-              className="gap-2 text-base px-10 h-12 font-semibold"
-            >
-              Criar conta grátis <ArrowRight className="h-4 w-4" />
-            </Button>
-            <p className="text-xs text-muted-foreground mt-4">
-              Sem cartão de crédito · Cancele quando quiser
-            </p>
-          </motion.div>
+            Criar conta grátis <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+          <p className="text-xs text-muted-foreground mt-4">
+            Sem cartão de crédito · Cancele quando quiser
+          </p>
         </div>
       </section>
 
-      <footer className="py-8 px-6 border-t border-border">
-        <div className="max-w-6xl mx-auto flex flex-col gap-5">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              <span className="font-bold gradient-text">TRILHA</span>
+      {/* ── FOOTER ─────────────────────────────────── */}
+      <footer className="py-20 px-6 border-t border-border bg-card/30 relative overflow-hidden">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto relative">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            {/* Col 1 — Brand */}
+            <div className="md:col-span-1">
+              <div className="flex items-center gap-3 mb-5">
+                <img
+                  src={logoTrilha}
+                  alt="TRILHA.X"
+                  className="h-12 w-12 rounded-2xl object-cover border-2 border-primary/60 shadow-lg shadow-primary/20"
+                />
+                <div>
+                  <span className="text-xl font-black gradient-text block">
+                    TRILHA.X
+                  </span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+                    </span>
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">
+                      Sistemas Online
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                Elevando o potencial humano através da gamificação e tecnologia
+                de ponta.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Um produto da{" "}
+                <span className="text-primary font-bold">VyteTech</span>
+              </p>
             </div>
-            <div className="flex items-center gap-6">
-              <button
-                onClick={() =>
-                  document
-                    .getElementById("modules")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Módulos
-              </button>
-              <button
-                onClick={() =>
-                  document
-                    .getElementById("gamification")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Gamificação
-              </button>
-              <button
-                onClick={() =>
-                  document
-                    .getElementById("pricing")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Planos
-              </button>
+
+            {/* Col 2 — Plataforma */}
+            <div>
+              <h4 className="font-bold text-foreground mb-5 text-sm uppercase tracking-wider">
+                Plataforma
+              </h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li>
+                  <button
+                    onClick={() =>
+                      document
+                        .getElementById("modules")
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
+                    className="hover:text-primary transition-colors"
+                  >
+                    Módulos
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() =>
+                      document
+                        .getElementById("gamification")
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
+                    className="hover:text-primary transition-colors"
+                  >
+                    Gamificação
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() =>
+                      document
+                        .getElementById("pricing")
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
+                    className="hover:text-primary transition-colors"
+                  >
+                    Planos & Preços
+                  </button>
+                </li>
+                <li>
+                  <Link
+                    to="/roadmap"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Roadmap
+                  </Link>
+                </li>
+              </ul>
             </div>
-            <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} TRILHA · VyteTech. Todos os direitos
-              reservados.
-            </p>
+
+            {/* Col 3 — Suporte & Legal */}
+            <div>
+              <h4 className="font-bold text-foreground mb-5 text-sm uppercase tracking-wider">
+                Legal & Suporte
+              </h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li>
+                  <Link
+                    to="/help"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Central de Ajuda
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/terms"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Termos de Uso
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/privacy"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Política de Privacidade
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 4 — Newsletter */}
+            <div>
+              <h4 className="font-bold text-foreground mb-5 text-sm uppercase tracking-wider">
+                Fique por dentro
+              </h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Receba novidades e atualizações do ecossistema VyteTech.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Seu e-mail"
+                  className="bg-background border border-border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-primary/50 transition-colors"
+                />
+                <Button size="sm" className="px-3 shrink-0">
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground/60 mt-2">
+                Sem spam. Cancele quando quiser.
+              </p>
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-5 pt-4 border-t border-border/50">
-            <Link
-              to="/terms"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Termos de Uso
-            </Link>
-            <span className="text-muted-foreground/30">·</span>
-            <Link
-              to="/privacy"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Política de Privacidade
-            </Link>
-            <span className="text-muted-foreground/30">·</span>
-            <a
-              href="mailto:trilhaapp@gmail.com"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              trilhaapp@gmail.com
-            </a>
+
+          {/* Bottom bar */}
+          <div className="pt-9 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-muted-foreground">
+              © {new Date().getFullYear()}{" "}
+              <span className="text-foreground font-bold">TRILHA.X</span> · Um
+              produto da{" "}
+              <span className="text-primary font-bold">VyteTech</span>. Todos os
+              direitos reservados.
+            </p>
+            <div className="flex items-center gap-5 text-xs text-muted-foreground">
+              <a
+                href="mailto:trilha.x@gmail.com"
+                className="hover:text-primary transition-colors flex items-center gap-1.5"
+              >
+                <Mail className="h-4 w-4" /> trilha.x@gmail.com
+              </a>
+            </div>
           </div>
         </div>
       </footer>
