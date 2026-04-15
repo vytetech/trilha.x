@@ -76,14 +76,21 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+    "monthly",
+  );
 
   useEffect(() => {
-    if (searchParams.get("success") === "true") {
+    const success = searchParams.get("success");
+    if (success === "true") {
       toast({
-        title: "Assinatura ativada! 🎉",
-        description: "Bem-vindo ao plano Premium!",
+        title: "Assinatura confirmada! 🎉",
+        description: "A atualizar a sua conta, por favor aguarde...",
       });
-      checkSubscription();
+
+      setTimeout(() => {
+        checkSubscription();
+      }, 1500);
     }
   }, [searchParams]);
 
@@ -110,7 +117,7 @@ export default function SettingsPage() {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Você precisa estar logado.",
+        description: "Sessão expirada. Faça login novamente.",
       });
       return;
     }
@@ -122,14 +129,16 @@ export default function SettingsPage() {
         {
           body: { plan: selectedPlan },
           headers: {
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${session.access_token.trim()}`,
           },
         },
       );
 
       if (error) throw error;
+
+      // REDIRECIONAMENTO SEGURO (Evita bloqueio de popup)
       if (data?.url) {
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       }
     } catch (err: any) {
       toast({
@@ -380,11 +389,22 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-foreground">
-                    {plan === "ultimate"
+                    {/* Lógica para mostrar Nome do Plano + Ciclo */}
+                    {plan.includes("ultimate")
                       ? "Plano Ultimate"
-                      : plan === "pro"
+                      : plan.includes("pro")
                         ? "Plano Pro"
                         : "Plano Free"}
+                    {plan.includes("yearly") && (
+                      <span className="text-xs font-normal ml-1 text-primary">
+                        (Anual)
+                      </span>
+                    )}
+                    {plan.includes("monthly") && (
+                      <span className="text-xs font-normal ml-1 text-primary">
+                        (Mensal)
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {plan !== "free"
@@ -420,6 +440,29 @@ export default function SettingsPage() {
               </div>
             </div>
           </SectionCard>
+
+          {/* SELETOR DE MENSAL / ANUAL */}
+          <div className="flex justify-center my-6">
+            <div className="bg-secondary p-1 rounded-lg border border-border inline-flex">
+              <button
+                type="button"
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${billingCycle === "monthly" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Mensal
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle("yearly")}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${billingCycle === "yearly" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Anual{" "}
+                <span className="text-[10px] ml-1 bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded">
+                  -20%
+                </span>
+              </button>
+            </div>
+          </div>
 
           {/* Planos */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -476,13 +519,13 @@ export default function SettingsPage() {
                 ))}
               </ul>
               <Button variant="outline" className="w-full" disabled>
-                Plano Atual
+                {plan === "free" ? "Plano Atual" : "Plano Base"}
               </Button>
             </div>
 
             {/* Pro */}
             <div
-              className={`rounded-xl border p-5 space-y-4 relative overflow-hidden ${plan === "pro" ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}
+              className={`rounded-xl border p-5 space-y-4 relative overflow-hidden ${plan.includes("pro") ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}
             >
               <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
                 POPULAR
@@ -492,16 +535,16 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                     <Crown className="h-5 w-5 text-primary" /> Pro
                   </h3>
-                  {plan === "pro" && (
+                  {plan.includes("pro") && (
                     <Badge className="bg-primary/20 text-primary border-none text-xs">
                       Atual
                     </Badge>
                   )}
                 </div>
                 <p className="text-2xl font-bold text-foreground mt-2">
-                  R$ 19,90
+                  {billingCycle === "monthly" ? "R$ 19,90" : "R$ 199,00"}
                   <span className="text-sm font-normal text-muted-foreground">
-                    /mês
+                    /{billingCycle === "monthly" ? "mês" : "ano"}
                   </span>
                 </p>
               </div>
@@ -535,29 +578,35 @@ export default function SettingsPage() {
                   </li>
                 ))}
               </ul>
-              {plan === "free" ? (
+              {/* Lógica de Botão Inteligente */}
+              {plan === `pro_${billingCycle}` ? (
+                <Button variant="outline" className="w-full" disabled>
+                  Plano Atual
+                </Button>
+              ) : (
                 <Button
                   className="w-full gap-2"
-                  onClick={() => handleCheckout("pro")}
-                  disabled={checkoutLoading}
+                  onClick={() => handleCheckout(`pro_${billingCycle}`)}
+                  disabled={checkoutLoading || plan.includes("ultimate")}
                 >
                   {checkoutLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Zap className="h-4 w-4" />
                   )}
-                  Assinar Pro
+                  {plan.includes("ultimate")
+                    ? "Membro Ultimate"
+                    : plan ===
+                        `pro_${billingCycle === "monthly" ? "yearly" : "monthly"}`
+                      ? "Trocar Ciclo"
+                      : `Assinar Pro ${billingCycle === "monthly" ? "Mensal" : "Anual"}`}
                 </Button>
-              ) : plan === "pro" ? (
-                <Button variant="outline" className="w-full" disabled>
-                  Plano Atual
-                </Button>
-              ) : null}
+              )}
             </div>
 
             {/* Ultimate */}
             <div
-              className={`rounded-xl border p-5 space-y-4 relative overflow-hidden ${plan === "ultimate" ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}
+              className={`rounded-xl border p-5 space-y-4 relative overflow-hidden ${plan.includes("ultimate") ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}
             >
               <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
                 COMPLETO
@@ -567,16 +616,16 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                     <Zap className="h-5 w-5 text-primary" /> Ultimate
                   </h3>
-                  {plan === "ultimate" && (
+                  {plan.includes("ultimate") && (
                     <Badge className="bg-primary/20 text-primary border-none text-xs">
                       Atual
                     </Badge>
                   )}
                 </div>
                 <p className="text-2xl font-bold text-foreground mt-2">
-                  R$ 39,90
+                  {billingCycle === "monthly" ? "R$ 39,90" : "R$ 399,00"}
                   <span className="text-sm font-normal text-muted-foreground">
-                    /mês
+                    /{billingCycle === "monthly" ? "mês" : "ano"}
                   </span>
                 </p>
               </div>
@@ -602,14 +651,14 @@ export default function SettingsPage() {
                   </li>
                 ))}
               </ul>
-              {plan === "ultimate" ? (
+              {plan === `ultimate_${billingCycle}` ? (
                 <Button variant="outline" className="w-full" disabled>
                   Plano Atual
                 </Button>
               ) : (
                 <Button
                   className="w-full gap-2"
-                  onClick={() => handleCheckout("ultimate")}
+                  onClick={() => handleCheckout(`ultimate_${billingCycle}`)}
                   disabled={checkoutLoading}
                 >
                   {checkoutLoading ? (
@@ -617,7 +666,10 @@ export default function SettingsPage() {
                   ) : (
                     <Crown className="h-4 w-4" />
                   )}
-                  Assinar Ultimate
+                  {plan ===
+                  `ultimate_${billingCycle === "monthly" ? "yearly" : "monthly"}`
+                    ? "Trocar Ciclo"
+                    : `Assinar Ultimate ${billingCycle === "monthly" ? "Mensal" : "Anual"}`}
                 </Button>
               )}
             </div>
@@ -708,9 +760,13 @@ export default function SettingsPage() {
               {[
                 {
                   label: "Plano Atual",
-                  value:
-                    (profile?.plan || "free").charAt(0).toUpperCase() +
-                    (profile?.plan || "free").slice(1),
+                  value: (() => {
+                    const p = (profile?.plan || "free").toLowerCase();
+                    if (p === "free") return "Free";
+                    const name = p.includes("ultimate") ? "Ultimate" : "Pro";
+                    const cycle = p.includes("yearly") ? "(Anual)" : "(Mensal)";
+                    return `${name} ${cycle}`;
+                  })(),
                   icon: <CreditCard className="h-4 w-4 text-primary" />,
                 },
                 {
