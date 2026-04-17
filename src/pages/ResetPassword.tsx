@@ -25,18 +25,30 @@ export default function ResetPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      toast({ variant: "destructive", title: "Erro", description: "As senhas não coincidem." });
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "As senhas não coincidem.",
+      });
       return;
     }
     if (password.length < 6) {
-      toast({ variant: "destructive", title: "Erro", description: "Mínimo 6 caracteres." });
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Mínimo 6 caracteres.",
+      });
       return;
     }
     setIsLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setIsLoading(false);
     if (error) {
-      toast({ variant: "destructive", title: "Erro", description: error.message });
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message,
+      });
     } else {
       toast({ title: "Senha atualizada!" });
       navigate("/dashboard");
@@ -45,7 +57,11 @@ export default function ResetPassword() {
 
   return (
     <div className="flex min-h-screen bg-background items-center justify-center p-8">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md space-y-8"
+      >
         <div className="flex items-center gap-2">
           <Zap className="h-8 w-8 text-primary" />
           <span className="text-2xl font-bold gradient-text">TRILHA</span>
@@ -54,11 +70,23 @@ export default function ResetPassword() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Nova senha</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-secondary border-border" />
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="bg-secondary border-border"
+            />
           </div>
           <div className="space-y-2">
             <Label>Confirmar senha</Label>
-            <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required className="bg-secondary border-border" />
+            <Input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+              className="bg-secondary border-border"
+            />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Salvando..." : "Salvar nova senha"}
