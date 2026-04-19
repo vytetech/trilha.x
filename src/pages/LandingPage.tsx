@@ -331,10 +331,10 @@ export default function LandingPage() {
             variants={fadeUp}
             custom={0}
           >
-            <Badge className="bg-primary/20 text-primary border-primary/30 mb-6 px-4 py-1.5 text-sm">
-              <Rocket className="h-4 w-4 mr-2" /> Plataforma completa de
-              evolução pessoal
-            </Badge>
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-primary border border-primary/20 bg-primary/5 rounded-full px-4 py-1.5 mb-6">
+              <Rocket className="h-3.5 w-3.5 animate-bounce-slow" /> Plataforma
+              completa de evolução pessoal
+            </span>
           </motion.div>
           <motion.h1
             initial="hidden"
@@ -434,9 +434,9 @@ export default function LandingPage() {
       <section id="modules" className="py-28 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="bg-primary/10 text-primary mb-4">
-              Funcionalidades
-            </Badge>
+            <span className="text-sm font-medium text-primary mb-4 block">
+              FUNCIONALIDADES
+            </span>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Tudo para sua <span className="neon-text">evolução</span>
             </h2>
@@ -485,9 +485,9 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="bg-primary/10 text-primary mb-4">
-              Gamificação
-            </Badge>
+            <span className="text-sm font-medium text-primary mb-4 block">
+              GAMIFICAÇÃO
+            </span>
             <h2 className="text-4xl md:text-5xl font-bold">
               Cada ação te faz <span className="neon-text">mais forte</span>
             </h2>
@@ -516,9 +516,9 @@ export default function LandingPage() {
       <section className="py-28 px-6 relative overflow-hidden bg-card/20 border-y border-border">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-none">
-              Como Funciona
-            </Badge>
+            <span className="text-sm font-medium text-primary mb-4 block">
+              COMO FUNCIONA
+            </span>
             <h2 className="text-4xl md:text-5xl font-bold">
               3 passos para <span className="neon-text">começar</span>
             </h2>
@@ -579,9 +579,9 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-none">
-              Depoimentos
-            </Badge>
+            <span className="text-sm font-medium text-primary mb-4 block">
+              DEPOIMENTOS
+            </span>
             <h2 className="text-4xl md:text-5xl font-bold">
               Quem usa <span className="neon-text">evolui</span>
             </h2>
@@ -633,7 +633,9 @@ export default function LandingPage() {
       {/* ── PRICING ────────────────────────────────── */}
       <section id="pricing" className="py-28 px-6 border-t border-border">
         <div className="max-w-6xl mx-auto text-center">
-          <Badge className="bg-primary/10 text-primary mb-4">Planos</Badge>
+          <span className="text-sm font-medium text-primary mb-4 block">
+            PLANOS
+          </span>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Escolha seu <span className="neon-text">caminho</span>
           </h2>
