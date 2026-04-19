@@ -313,7 +313,7 @@ export default function LandingPage() {
           <div className="flex items-center">
             <button
               onClick={() => navigate("/login")}
-              className="text-sm font-medium text-muted-foreground border border-border rounded-lg px-4 py-2 hover:border-primary hover:text-primary transition-all duration-200"
+              className="text-md font-bold text-muted-foreground border border-border rounded-lg px-5 py-3 hover:border-primary hover:text-primary transition-all duration-200"
             >
               Entrar
             </button>
