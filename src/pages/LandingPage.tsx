@@ -310,21 +310,13 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
+          <div className="flex items-center">
+            <button
               onClick={() => navigate("/login")}
+              className="text-sm font-medium text-muted-foreground border border-border rounded-lg px-4 py-2 hover:border-primary hover:text-primary transition-all duration-200"
             >
               Entrar
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => navigate("/signup")}
-              className="gap-1.5 shadow-lg shadow-primary/20"
-            >
-              Começar <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
+            </button>
           </div>
         </div>
       </nav>
