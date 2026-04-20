@@ -10,8 +10,8 @@ import {
   CreditCard,
   Shield,
   Settings,
+  ArrowLeft,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -144,9 +144,17 @@ export default function HelpPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <Badge className="bg-primary/10 text-primary mb-4">
-          Central de Ajuda
-        </Badge>
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline underline-offset-4 transition-all duration-200 mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao início
+        </button>
+
+        <span className="text-sm font-medium text-primary mb-4 block">
+          CENTRAL DE AJUDA
+        </span>
         <h1 className="text-4xl font-black text-foreground mb-3">
           Como podemos <span className="neon-text">ajudar</span>?
         </h1>
