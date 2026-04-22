@@ -885,12 +885,15 @@ export default function LandingPage() {
                   </button>
                 </li>
                 <li>
-                  <Link
-                    to="/roadmap"
+                  <button
+                    onClick={() => {
+                      window.scrollTo(0, 0);
+                      navigate("/roadmap");
+                    }}
                     className="hover:text-primary transition-colors"
                   >
                     Roadmap
-                  </Link>
+                  </button>
                 </li>
               </ul>
             </div>
@@ -902,28 +905,37 @@ export default function LandingPage() {
               </h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li>
-                  <Link
-                    to="/help"
+                  <button
+                    onClick={() => {
+                      window.scrollTo(0, 0);
+                      navigate("/help");
+                    }}
                     className="hover:text-primary transition-colors"
                   >
                     Central de Ajuda
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link
-                    to="/terms"
+                  <button
+                    onClick={() => {
+                      window.scrollTo(0, 0);
+                      navigate("/terms");
+                    }}
                     className="hover:text-primary transition-colors"
                   >
                     Termos de Uso
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link
-                    to="/privacy"
+                  <button
+                    onClick={() => {
+                      window.scrollTo(0, 0);
+                      navigate("/privacy");
+                    }}
                     className="hover:text-primary transition-colors"
                   >
                     Política de Privacidade
-                  </Link>
+                  </button>
                 </li>
               </ul>
             </div>
