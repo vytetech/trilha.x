@@ -377,7 +377,7 @@ export default function LandingPage() {
                   .getElementById("modules")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className="text-lg px-10 h-14 font-bold text-muted-foreground border border-border rounded-lg hover:border-primary hover:text-primary transition-all duration-200 flex items-center gap-2"
+              className="text-lg px-10 h-14 font-bold text-muted-foreground border border-border rounded-lg hover:border-primary hover:text-primary transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Eye className="h-5 w-5" /> Ver Módulos
             </button>
