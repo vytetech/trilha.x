@@ -35,7 +35,6 @@ import { cn } from "@/lib/utils";
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const name = user?.user_metadata?.full_name || "Usuário";
   const [profile, setProfile] = useState<any>(null);
   const [tasksDone, setTasksDone] = useState(0);
   const [tasksPending, setTasksPending] = useState(0);
@@ -166,6 +165,8 @@ export default function Dashboard() {
     `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
   const habitsProgress =
     totalHabits > 0 ? Math.round((habitsToday / totalHabits) * 100) : 0;
+  const name =
+    profile?.full_name || user?.user_metadata?.full_name || "Usuário";
 
   const radarData = [
     { attr: "Foco", value: Math.min(tasksDone * 5, 100), fullMark: 100 },
@@ -216,8 +217,10 @@ export default function Dashboard() {
           <div>
             <p className="text-sm text-muted-foreground">{greeting()},</p>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mt-0.5">
-              <span className="text-primary">{name.split(" ")[0]}</span>,
-              continue crescendo 🚀
+              <span className="text-primary">
+                {name.split(" ").slice(0, 2).join(" ")}
+              </span>
+              , continue crescendo 🚀
             </h1>
           </div>
           <div className="flex items-center gap-4">

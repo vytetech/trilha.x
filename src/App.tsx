@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { ThemeProvider } from "next-themes";
 
 // Layouts
 import PublicLayout from "@/components/PublicLayout";
@@ -38,59 +39,61 @@ import SettingsPage from "@/pages/SettingsPage";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <Routes>
-              {/* ── Landing (nav/footer próprios com scroll dinâmico) */}
-              <Route path="/" element={<LandingPage />} />
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <Routes>
+                {/* ── Landing (nav/footer próprios com scroll dinâmico) */}
+                <Route path="/" element={<LandingPage />} />
 
-              {/* ── Auth (sem nav/footer público) */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+                {/* ── Auth (sem nav/footer público) */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
-              {/* ── Páginas públicas com nav + footer compartilhados */}
-              <Route element={<PublicLayout />}>
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/roadmap" element={<RoadmapPage />} />
-                <Route path="/help" element={<HelpPage />} />
-              </Route>
+                {/* ── Páginas públicas com nav + footer compartilhados */}
+                <Route element={<PublicLayout />}>
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/roadmap" element={<RoadmapPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+                </Route>
 
-              {/* ── Páginas protegidas (dashboard com sidebar) */}
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/tasks" element={<TasksPage />} />
-                <Route path="/habits" element={<HabitsPage />} />
-                <Route path="/goals" element={<GoalsPage />} />
-                <Route path="/finances" element={<FinancePage />} />
-                <Route path="/investments" element={<InvestmentsPage />} />
-                <Route path="/dreams" element={<DreamsPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/ranking" element={<RankingPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Route>
+                {/* ── Páginas protegidas (dashboard com sidebar) */}
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/tasks" element={<TasksPage />} />
+                  <Route path="/habits" element={<HabitsPage />} />
+                  <Route path="/goals" element={<GoalsPage />} />
+                  <Route path="/finances" element={<FinancePage />} />
+                  <Route path="/investments" element={<InvestmentsPage />} />
+                  <Route path="/dreams" element={<DreamsPage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
+                  <Route path="/ranking" element={<RankingPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Route>
 
-              {/* ── 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </SubscriptionProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+                {/* ── 404 */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

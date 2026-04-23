@@ -10,11 +10,14 @@ import {
   Settings,
   LogOut,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -55,6 +58,7 @@ const menuItems = [
 export function AppSidebar() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [profileName, setProfileName] = useState<string>("");
 
   useEffect(() => {
@@ -98,6 +102,21 @@ export function AppSidebar() {
       </div>
 
       <SidebarContent className="px-3 py-4">
+        {/* Perfil do usuário */}
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/50 border border-border">
+          <div className="h-8 w-8 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
+            <span className="text-primary font-bold text-xs">{initials}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">
+              {fullName.split(" ").slice(0, 2).join(" ")}
+            </p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              {email}
+            </p>
+          </div>
+        </div>
+
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -122,20 +141,27 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="px-3 pb-4 space-y-2">
-        {/* Perfil do usuário */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/50 border border-border">
-          <div className="h-8 w-8 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
-            <span className="text-primary font-bold text-xs">{initials}</span>
+        {/* Toggle de tema */}
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4 shrink-0" />
+            ) : (
+              <Moon className="h-4 w-4 shrink-0" />
+            )}
+            <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {fullName.split(" ").slice(0, 2).join(" ")}
-            </p>
-            <p className="text-[10px] text-muted-foreground truncate">
-              {email}
-            </p>
+          <div
+            className={`w-8 h-4 rounded-full transition-colors duration-300 relative ${theme === "dark" ? "bg-muted" : "bg-primary"}`}
+          >
+            <div
+              className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all duration-300 ${theme === "dark" ? "left-0.5" : "left-4"}`}
+            />
           </div>
-        </div>
+        </button>
 
         {/* Botão sair com confirmação */}
         <AlertDialog>
