@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const roadmap = [
   {
-    quarter: "Q1 2025",
+    quarter: "Q1 2026",
     status: "done",
     label: "Concluído",
     items: [
@@ -19,7 +19,7 @@ const roadmap = [
     ],
   },
   {
-    quarter: "Q2 2025",
+    quarter: "Q2 2026",
     status: "done",
     label: "Concluído",
     items: [
@@ -32,7 +32,7 @@ const roadmap = [
     ],
   },
   {
-    quarter: "Q3 2025",
+    quarter: "Q3 2026",
     status: "current",
     label: "Em andamento",
     items: [
@@ -45,7 +45,7 @@ const roadmap = [
     ],
   },
   {
-    quarter: "Q4 2025",
+    quarter: "Q4 2026",
     status: "planned",
     label: "Planejado",
     items: [
@@ -83,7 +83,7 @@ const statusConfig = {
 export default function RoadmapPage() {
   const navigate = useNavigate();
   return (
-    <div className="max-w-4xl mx-auto px-6 pt-28 pb-24">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-16 sm:pb-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -99,7 +99,7 @@ export default function RoadmapPage() {
         <span className="text-sm font-medium text-primary mb-4 block">
           ROADMAP
         </span>
-        <h1 className="text-4xl font-black text-foreground mb-3">
+        <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-3">
           O futuro do <span className="neon-text">TRILHA.X</span>
         </h1>
         <p className="text-muted-foreground mb-16 max-w-xl">
@@ -107,7 +107,7 @@ export default function RoadmapPage() {
           continuamente para elevar sua experiência.
         </p>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {roadmap.map((phase, i) => {
             const cfg = statusConfig[phase.status as keyof typeof statusConfig];
             const Icon = cfg.icon;

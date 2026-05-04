@@ -139,7 +139,7 @@ export default function HelpPage() {
     .filter((cat) => cat.items.length > 0);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 pt-28 pb-24">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-16 sm:pb-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -155,14 +155,14 @@ export default function HelpPage() {
         <span className="text-sm font-medium text-primary mb-4 block">
           CENTRAL DE AJUDA
         </span>
-        <h1 className="text-4xl font-black text-foreground mb-3">
+        <h1 className="text-3xl sm:text-4xl font-black text-foreground mb-3">
           Como podemos <span className="neon-text">ajudar</span>?
         </h1>
         <p className="text-muted-foreground mb-8">
           Encontre respostas para as dúvidas mais comuns sobre o TRILHA.X.
         </p>
 
-        <div className="relative mb-12">
+        <div className="relative mb-8 sm:mb-12">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
@@ -172,7 +172,7 @@ export default function HelpPage() {
           />
         </div>
 
-        <div className="space-y-10">
+        <div className="space-y-8 sm:space-y-10">
           {(search ? filtered : faqs).map((cat) => {
             const Icon = cat.icon;
             return (
@@ -199,7 +199,7 @@ export default function HelpPage() {
           )}
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="mt-10 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-2xl border border-border bg-card p-6 text-center">
             <Mail className="h-8 w-8 text-primary mx-auto mb-3" />
             <h3 className="font-bold text-foreground mb-2">E-mail</h3>

@@ -17,7 +17,7 @@ export default function PrivacyPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 pt-28 pb-24">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-16 sm:pb-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           {from === "/signup" ? "Voltar ao cadastro" : "Voltar ao início"}
         </button>
 
-        <h1 className="text-3xl font-black text-foreground mb-2">
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-2">
           Política de Privacidade
         </h1>
         <p className="text-sm text-muted-foreground mb-10">

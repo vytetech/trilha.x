@@ -25,7 +25,7 @@ export default function NotFound() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 sm:px-6 relative overflow-hidden">
       {/* Glow de fundo */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
@@ -33,7 +33,7 @@ export default function NotFound() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-8 left-8"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8"
       >
         <Link
           to="/"
@@ -58,7 +58,7 @@ export default function NotFound() {
           transition={{ duration: 0.5 }}
         >
           <div className="relative inline-block">
-            <span className="text-[160px] md:text-[220px] font-black text-foreground/5 leading-none select-none">
+            <span className="text-[110px] sm:text-[160px] md:text-[220px] font-black text-foreground/5 leading-none select-none">
               404
             </span>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -77,7 +77,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h1 className="text-3xl md:text-4xl font-black text-foreground mb-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground mb-3">
             Página não encontrada
           </h1>
           <p className="text-muted-foreground mb-2">

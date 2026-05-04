@@ -1,29 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mail, ArrowLeft } from "lucide-react";
+import { ArrowRight, Mail, Menu, X } from "lucide-react";
 import logoTrilha from "@/assets/logo-trilha.x.png";
 
-/**
- * PublicLayout
- * Layout compartilhado por todas as páginas públicas:
- * /, /terms, /privacy, /roadmap, /help, /404
- *
- * Inclui:
- *  - Navbar igual à LandingPage (com logo + links de navegação)
- *  - Footer profissional com 4 colunas
- *
- * Nas páginas internas (não Landing), o nav mostra "Voltar" inteligente.
- */
 export default function PublicLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const isLanding = location.pathname === "/";
-  const from = (location.state as any)?.from || "/";
 
   const scrollTo = (id: string) => {
+    setMenuOpen(false);
     if (isLanding) {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     } else {
@@ -33,34 +23,36 @@ export default function PublicLayout() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  const navLinks = [
+    { label: "Módulos", id: "modules" },
+    { label: "Gamificação", id: "gamification" },
+    { label: "Depoimentos", id: "testimonials" },
+    { label: "Planos", id: "pricing" },
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden flex flex-col">
       {/* ── NAVBAR ─────────────────────────────────── */}
       <nav className="fixed top-0 w-full z-50 glass-strong border-b border-border/40">
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           {/* Logo */}
           <button
             onClick={isLanding ? scrollToTop : () => navigate("/")}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
           >
             <img
               src={logoTrilha}
               alt="TRILHA.X"
-              className="h-10 w-10 rounded-xl object-cover border-2 border-primary shadow-[0_0_12px_rgba(34,197,94,0.35)]"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl object-cover border-2 border-primary shadow-[0_0_12px_rgba(34,197,94,0.35)]"
             />
-            <span className="text-2xl font-black gradient-text tracking-tighter uppercase">
+            <span className="text-xl sm:text-2xl font-black gradient-text tracking-tighter uppercase">
               TRILHA.X
             </span>
           </button>
 
-          {/* Nav links — sempre visível */}
+          {/* Nav links — desktop */}
           <div className="hidden md:flex items-center gap-8">
-            {[
-              { label: "Módulos", id: "modules" },
-              { label: "Gamificação", id: "gamification" },
-              { label: "Depoimentos", id: "testimonials" },
-              { label: "Planos", id: "pricing" },
-            ].map((item) => (
+            {navLinks.map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollTo(item.id)}
@@ -71,16 +63,55 @@ export default function PublicLayout() {
             ))}
           </div>
 
-          {/* CTAs */}
-          <div className="flex items-center">
+          {/* Right side */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => navigate("/login")}
-              className="text-md font-bold text-muted-foreground border border-border rounded-lg px-5 py-3 hover:border-primary hover:text-primary transition-all duration-200"
+              className="hidden sm:block text-md font-bold text-muted-foreground border border-border rounded-lg px-5 py-3 hover:border-primary hover:text-primary transition-all duration-200"
             >
               Entrar
             </button>
+
+            {/* Hamburger — mobile only */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg border border-border text-muted-foreground hover:border-primary hover:text-primary transition-all"
+              aria-label="Menu"
+            >
+              {menuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Mobile menu dropdown */}
+        {menuOpen && (
+          <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 flex flex-col gap-1">
+            {navLinks.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
+                className="text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors text-left px-4 py-3 rounded-lg"
+              >
+                {item.label}
+              </button>
+            ))}
+            <div className="border-t border-border mt-2 pt-3">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate("/login");
+                }}
+                className="w-full text-sm font-bold text-primary border border-primary/30 rounded-lg px-4 py-3 hover:bg-primary/5 transition-all text-left"
+              >
+                Entrar
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ── CONTEÚDO DA PÁGINA ─────────────────────── */}
@@ -89,21 +120,21 @@ export default function PublicLayout() {
       </main>
 
       {/* ── FOOTER ─────────────────────────────────── */}
-      <footer className="py-20 px-6 border-t border-border bg-card/30 relative overflow-hidden">
+      <footer className="py-12 sm:py-20 px-4 sm:px-6 border-t border-border bg-card/30 relative overflow-hidden">
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="max-w-6xl mx-auto relative">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            {/* Col 1 — Brand */}
-            <div className="md:col-span-1">
-              <div className="flex items-center gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-16">
+            {/* Col 1 — Brand (full width on mobile) */}
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-3 mb-4">
                 <img
                   src={logoTrilha}
                   alt="TRILHA.X"
-                  className="h-12 w-12 rounded-2xl object-cover border-2 border-primary/60 shadow-lg shadow-primary/20"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl object-cover border-2 border-primary/60 shadow-lg shadow-primary/20"
                 />
                 <div>
-                  <span className="text-xl font-black gradient-text block">
+                  <span className="text-lg sm:text-xl font-black gradient-text block">
                     TRILHA.X
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
@@ -117,7 +148,7 @@ export default function PublicLayout() {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 Elevando o potencial humano através da gamificação e tecnologia
                 de ponta.
               </p>
@@ -136,10 +167,10 @@ export default function PublicLayout() {
 
             {/* Col 2 — Plataforma */}
             <div>
-              <h4 className="font-bold text-foreground mb-5 text-sm uppercase tracking-wider">
+              <h4 className="font-bold text-foreground mb-4 text-xs uppercase tracking-wider">
                 Plataforma
               </h4>
-              <ul className="space-y-3 text-sm text-muted-foreground">
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
                 <li>
                   <button
                     onClick={() => scrollTo("modules")}
@@ -180,10 +211,10 @@ export default function PublicLayout() {
 
             {/* Col 3 — Legal & Suporte */}
             <div>
-              <h4 className="font-bold text-foreground mb-5 text-sm uppercase tracking-wider">
+              <h4 className="font-bold text-foreground mb-4 text-xs uppercase tracking-wider">
                 Legal & Suporte
               </h4>
-              <ul className="space-y-3 text-sm text-muted-foreground">
+              <ul className="space-y-2.5 text-sm text-muted-foreground">
                 <li>
                   <button
                     onClick={() => {
@@ -220,12 +251,12 @@ export default function PublicLayout() {
               </ul>
             </div>
 
-            {/* Col 4 — Newsletter */}
-            <div>
-              <h4 className="font-bold text-foreground mb-5 text-sm uppercase tracking-wider">
+            {/* Col 4 — Newsletter (full width on mobile) */}
+            <div className="col-span-2 md:col-span-1">
+              <h4 className="font-bold text-foreground mb-4 text-xs uppercase tracking-wider">
                 Fique por dentro
               </h4>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-3">
                 Receba novidades e atualizações do ecossistema VyteTech.
               </p>
               <div className="flex gap-2">
@@ -247,8 +278,8 @@ export default function PublicLayout() {
           </div>
 
           {/* Bottom bar */}
-          <div className="pt-9 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-muted-foreground">
+          <div className="pt-6 sm:pt-9 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3">
+            <p className="text-xs text-muted-foreground text-center sm:text-left">
               © {new Date().getFullYear()}{" "}
               <span className="text-foreground font-bold">TRILHA.X</span> · Um
               produto da{" "}
@@ -262,14 +293,12 @@ export default function PublicLayout() {
               </a>
               . Todos os direitos reservados.
             </p>
-            <div className="flex items-center gap-5 text-xs text-muted-foreground">
-              <a
-                href="mailto:trilhax.app@gmail.com"
-                className="hover:text-primary hover:underline transition-colors flex items-center gap-1.5"
-              >
-                <Mail className="h-4 w-4" /> trilhax.app@gmail.com
-              </a>
-            </div>
+            <a
+              href="mailto:trilhax.app@gmail.com"
+              className="hover:text-primary hover:underline transition-colors flex items-center gap-1.5 text-xs text-muted-foreground"
+            >
+              <Mail className="h-4 w-4" /> trilhax.app@gmail.com
+            </a>
           </div>
         </div>
       </footer>

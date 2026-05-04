@@ -274,7 +274,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* ── NAVBAR ─────────────────────────────────── */}
       <nav className="fixed top-0 w-full z-50 glass-strong border-b border-border/40">
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           <button
             onClick={scrollToTop}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -322,7 +322,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ───────────────────────────────────── */}
-      <section className="pt-36 pb-28 px-6 relative">
+      <section className="pt-24 sm:pt-36 pb-16 sm:pb-28 px-4 sm:px-6 relative">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-primary/8 rounded-full blur-[140px] pointer-events-none" />
         <div className="max-w-5xl mx-auto text-center relative">
           <motion.div
@@ -341,9 +341,9 @@ export default function LandingPage() {
             animate="visible"
             variants={fadeUp}
             custom={1}
-            className="text-5xl sm:text-6xl md:text-8xl font-black text-foreground leading-[1] tracking-tighter mb-8"
+            className="text-4xl sm:text-6xl md:text-8xl font-black text-foreground leading-[1.05] tracking-tighter mb-6 sm:mb-8"
           >
-            Sua vida como um <br />
+            Sua vida como um <br className="hidden sm:block" />
             <span className="neon-text">jogo de evolução real</span>
           </motion.h1>
           <motion.p
@@ -377,7 +377,7 @@ export default function LandingPage() {
                   .getElementById("modules")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className="text-lg px-10 h-14 font-bold text-muted-foreground border border-border rounded-lg hover:border-primary hover:text-primary transition-all duration-200 flex items-center justify-center gap-2"
+              className="text-base sm:text-lg px-7 sm:px-10 h-12 sm:h-14 font-bold text-muted-foreground border border-border rounded-lg hover:border-primary hover:text-primary transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Eye className="h-5 w-5" /> Ver Módulos
             </button>
@@ -389,7 +389,7 @@ export default function LandingPage() {
             animate="visible"
             variants={fadeUp}
             custom={4}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 max-w-2xl mx-auto"
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mt-14 sm:mt-20 max-w-2xl mx-auto"
           >
             {[
               { value: "9", label: "Módulos completos" },
@@ -410,7 +410,7 @@ export default function LandingPage() {
 
       {/* ── TRUST BADGES ───────────────────────────── */}
       <section className="py-8 px-6 border-y border-border bg-card/50">
-        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-10">
+        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-5 sm:gap-10">
           {[
             { icon: Shield, text: "Dados criptografados" },
             { icon: Smartphone, text: "100% responsivo" },
@@ -429,13 +429,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── MODULES ────────────────────────────────── */}
-      <section id="modules" className="py-28 px-6">
+      <section id="modules" className="py-16 sm:py-28 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <span className="text-sm font-medium text-primary mb-4 block">
               FUNCIONALIDADES
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
               Tudo para sua <span className="neon-text">evolução</span>
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
@@ -479,14 +479,14 @@ export default function LandingPage() {
       {/* ── GAMIFICATION ───────────────────────────── */}
       <section
         id="gamification"
-        className="py-28 px-6 border-t border-border bg-primary/[0.01]"
+        className="py-16 sm:py-28 px-4 sm:px-6 border-t border-border bg-primary/[0.01]"
       >
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <span className="text-sm font-medium text-primary mb-4 block">
               GAMIFICAÇÃO
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">
               Cada ação te faz <span className="neon-text">mais forte</span>
             </h2>
           </div>
@@ -499,7 +499,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="rounded-2xl border border-border bg-card/50 p-8 hover:bg-card hover:border-primary/30 transition-all"
+                className="rounded-2xl border border-border bg-card/50 p-5 sm:p-8 hover:bg-card hover:border-primary/30 transition-all"
               >
                 <span className="text-4xl block mb-4">{item.icon}</span>
                 <h3 className="font-bold text-xl mb-3">{item.title}</h3>
@@ -511,13 +511,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ───────────────────────────── */}
-      <section className="py-28 px-6 relative overflow-hidden bg-card/20 border-y border-border">
+      <section className="py-16 sm:py-28 px-4 sm:px-6 relative overflow-hidden bg-card/20 border-y border-border">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <span className="text-sm font-medium text-primary mb-4 block">
               COMO FUNCIONA
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">
               3 passos para <span className="neon-text">começar</span>
             </h2>
             <p className="text-muted-foreground mt-4">
@@ -526,7 +526,7 @@ export default function LandingPage() {
           </div>
           <div className="relative">
             <div className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent z-0" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-16 relative z-10">
               {[
                 {
                   step: "01",
@@ -573,14 +573,14 @@ export default function LandingPage() {
       {/* ── TESTIMONIALS ───────────────────────────── */}
       <section
         id="testimonials"
-        className="py-28 px-6 bg-primary/[0.01] border-b border-border overflow-hidden"
+        className="py-16 sm:py-28 px-4 sm:px-6 bg-primary/[0.01] border-b border-border overflow-hidden"
       >
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <span className="text-sm font-medium text-primary mb-4 block">
               DEPOIMENTOS
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">
               Quem usa <span className="neon-text">evolui</span>
             </h2>
             <p className="text-muted-foreground mt-4">
@@ -596,7 +596,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="break-inside-avoid bg-card/60 backdrop-blur-sm border border-border p-8 rounded-3xl hover:border-primary/40 transition-all cursor-default group"
+                className="break-inside-avoid bg-card/60 backdrop-blur-sm border border-border p-5 sm:p-8 rounded-3xl hover:border-primary/40 transition-all cursor-default group"
               >
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-black text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
@@ -629,7 +629,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ────────────────────────────────── */}
-      <section id="pricing" className="py-28 px-6 border-t border-border">
+      <section
+        id="pricing"
+        className="py-16 sm:py-28 px-4 sm:px-6 border-t border-border"
+      >
         <div className="max-w-6xl mx-auto text-center">
           <span className="text-sm font-medium text-primary mb-4 block">
             PLANOS
@@ -678,9 +681,9 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className={`rounded-3xl border p-8 flex flex-col text-left transition-all relative ${
+                className={`rounded-3xl border p-5 sm:p-8 flex flex-col text-left transition-all relative ${
                   plan.highlight
-                    ? "border-primary bg-primary/[0.03] scale-105 shadow-2xl shadow-primary/10"
+                    ? "border-primary bg-primary/[0.03] sm:scale-105 shadow-2xl shadow-primary/10"
                     : "border-border bg-card"
                 }`}
               >
@@ -764,7 +767,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FINAL CTA ──────────────────────────────── */}
-      <section className="py-28 px-6 border-t border-border relative overflow-hidden bg-card/10">
+      <section className="py-16 sm:py-28 px-4 sm:px-6 border-t border-border relative overflow-hidden bg-card/10">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.03] to-transparent pointer-events-none" />
         <div className="max-w-2xl mx-auto text-center relative">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-8">
@@ -774,7 +777,7 @@ export default function LandingPage() {
               className="h-20 w-20 rounded-2xl object-cover border-2 border-primary/60 shadow-lg shadow-primary/20"
             />
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-foreground mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground mb-4">
             Pronto para <span className="neon-text">evoluir</span>?
           </h2>
           <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg">
@@ -795,13 +798,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ─────────────────────────────────── */}
-      <footer className="py-20 px-6 border-t border-border bg-card/30 relative overflow-hidden">
+      <footer className="py-12 sm:py-20 px-4 sm:px-6 border-t border-border bg-card/30 relative overflow-hidden">
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="max-w-6xl mx-auto relative">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-16">
             {/* Col 1 — Brand */}
-            <div className="md:col-span-1">
+            <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-3 mb-5">
                 <img
                   src={logoTrilha}
@@ -939,7 +942,7 @@ export default function LandingPage() {
             </div>
 
             {/* Col 4 — Newsletter */}
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <h4 className="font-bold text-foreground mb-5 text-sm uppercase tracking-wider">
                 Fique por dentro
               </h4>
@@ -965,7 +968,7 @@ export default function LandingPage() {
           </div>
 
           {/* Bottom bar */}
-          <div className="pt-9 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="pt-6 sm:pt-9 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3">
             <p className="text-xs text-muted-foreground">
               © {new Date().getFullYear()}{" "}
               <span className="text-foreground font-bold">TRILHA.X</span> · Um
