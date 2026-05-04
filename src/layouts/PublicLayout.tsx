@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mail, Menu, X } from "lucide-react";
+import { ArrowRight, Mail, LogIn, Rocket, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import logoTrilha from "@/assets/logo-trilha.x.png";
 
 export default function PublicLayout() {
@@ -12,10 +13,17 @@ export default function PublicLayout() {
 
   const isLanding = location.pathname === "/";
 
-  const scrollTo = (id: string) => {
+  const scrollTo = (id: string, fromMobile = false) => {
     setMenuOpen(false);
     if (isLanding) {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      const delay = fromMobile ? 320 : 0;
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const navHeight = fromMobile ? 64 : 80;
+        const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+        window.scrollTo({ top, behavior: "smooth" });
+      }, delay);
     } else {
       navigate("/", { state: { scrollTo: id } });
     }
@@ -43,7 +51,7 @@ export default function PublicLayout() {
             <img
               src={logoTrilha}
               alt="TRILHA.X"
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl object-cover border-2 border-primary shadow-[0_0_12px_rgba(34,197,94,0.35)]"
+              className="h-12 w-12 sm:h-10 sm:w-10 rounded-xl object-cover border-2 border-primary shadow-[0_0_12px_rgba(34,197,94,0.35)]"
             />
             <span className="text-xl sm:text-2xl font-black gradient-text tracking-tighter uppercase">
               TRILHA.X
@@ -67,7 +75,7 @@ export default function PublicLayout() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate("/login")}
-              className="hidden sm:block text-md font-bold text-muted-foreground border border-border rounded-lg px-5 py-3 hover:border-primary hover:text-primary transition-all duration-200"
+              className="hidden md:block text-md font-bold text-muted-foreground border border-border rounded-lg px-4 py-3 hover:border-primary hover:text-primary transition-all duration-200"
             >
               Entrar
             </button>
@@ -75,43 +83,91 @@ export default function PublicLayout() {
             {/* Hamburger — mobile only */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg border border-border text-muted-foreground hover:border-primary hover:text-primary transition-all"
               aria-label="Menu"
+              className={`md:hidden relative flex items-center justify-center w-12 h-12 rounded-xl border transition-all duration-300 ${
+                menuOpen
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:border-primary/50 hover:text-primary"
+              }`}
             >
-              {menuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              <motion.div
+                animate={menuOpen ? "open" : "closed"}
+                className="flex flex-col items-center justify-center gap-1.5 w-5"
+              >
+                <motion.span
+                  variants={{
+                    closed: { rotate: 0, y: 0 },
+                    open: { rotate: 45, y: 7 },
+                  }}
+                  transition={{ duration: 0.25 }}
+                  className="block h-0.5 w-full bg-current rounded-full origin-center"
+                />
+                <motion.span
+                  variants={{
+                    closed: { opacity: 1, scaleX: 1 },
+                    open: { opacity: 0, scaleX: 0 },
+                  }}
+                  transition={{ duration: 0.2 }}
+                  className="block h-0.5 w-full bg-current rounded-full"
+                />
+                <motion.span
+                  variants={{
+                    closed: { rotate: 0, y: 0 },
+                    open: { rotate: -45, y: -7 },
+                  }}
+                  transition={{ duration: 0.25 }}
+                  className="block h-0.5 w-full bg-current rounded-full origin-center"
+                />
+              </motion.div>
             </button>
           </div>
         </div>
 
-        {/* Mobile menu dropdown */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 flex flex-col gap-1">
-            {navLinks.map((item) => (
-              <button
+        {/* Mobile menu — animated slide down */}
+        <motion.div
+          initial={false}
+          animate={
+            menuOpen
+              ? { height: "auto", opacity: 1 }
+              : { height: 0, opacity: 0 }
+          }
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="md:hidden overflow-hidden border-t border-border/60 bg-background/98 backdrop-blur-xl"
+        >
+          <div className="px-4 pt-3 pb-5 flex flex-col gap-1">
+            {navLinks.map((item, i) => (
+              <motion.button
                 key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className="text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors text-left px-4 py-3 rounded-lg"
+                initial={{ opacity: 0, x: -12 }}
+                animate={
+                  menuOpen ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 }
+                }
+                transition={{ delay: menuOpen ? i * 0.06 : 0, duration: 0.2 }}
+                onClick={() => scrollTo(item.id, true)}
+                className="flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all group"
               >
-                {item.label}
-              </button>
+                <span>{item.label}</span>
+                <ChevronRight className="h-4 w-4 opacity-30 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+              </motion.button>
             ))}
-            <div className="border-t border-border mt-2 pt-3">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate("/login");
-                }}
-                className="w-full text-sm font-bold text-primary border border-primary/30 rounded-lg px-4 py-3 hover:bg-primary/5 transition-all text-left"
-              >
-                Entrar
-              </button>
-            </div>
+
+            <div className="my-2 border-t border-border/50" />
+
+            <motion.button
+              initial={{ opacity: 0, y: 8 }}
+              animate={menuOpen ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+              transition={{ delay: menuOpen ? 0.28 : 0, duration: 0.2 }}
+              onClick={() => {
+                setMenuOpen(false);
+                navigate("/login");
+              }}
+              className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm font-bold text-muted-foreground border border-border hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all"
+            >
+              <LogIn className="h-4 w-4" />
+              Entrar na minha conta
+            </motion.button>
           </div>
-        )}
+        </motion.div>
       </nav>
 
       {/* ── CONTEÚDO DA PÁGINA ─────────────────────── */}
@@ -131,7 +187,7 @@ export default function PublicLayout() {
                 <img
                   src={logoTrilha}
                   alt="TRILHA.X"
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl object-cover border-2 border-primary/60 shadow-lg shadow-primary/20"
+                  className="h-12 w-12 sm:h-12 sm:w-12 rounded-2xl object-cover border-2 border-primary/60 shadow-lg shadow-primary/20"
                 />
                 <div>
                   <span className="text-lg sm:text-xl font-black gradient-text block">
