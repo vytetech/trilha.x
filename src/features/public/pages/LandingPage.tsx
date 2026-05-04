@@ -507,7 +507,11 @@ export default function LandingPage() {
             animate="visible"
             variants={fadeUp}
             custom={4}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mt-14 sm:mt-20 max-w-2xl mx-auto"
+            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 
+                      gap-6 sm:gap-8 
+                      mt-12 sm:mt-16 
+                      max-w-md sm:max-w-2xl 
+                      mx-auto px-4"
           >
             {[
               { value: "9", label: "Módulos completos" },
@@ -515,11 +519,16 @@ export default function LandingPage() {
               { value: "∞", label: "Potencial de XP" },
               { value: "100%", label: "Gamificado" },
             ].map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="text-3xl md:text-4xl font-black neon-text font-mono">
+              <div
+                key={s.label}
+                className="text-center flex flex-col items-center"
+              >
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black neon-text font-mono">
                   {s.value}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2 leading-tight">
+                  {s.label}
+                </p>
               </div>
             ))}
           </motion.div>
@@ -527,8 +536,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── TRUST BADGES ───────────────────────────── */}
-      <section className="py-8 px-6 border-y border-border bg-card/50">
-        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-5 sm:gap-10">
+      <section className="py-10 px-4 border-y border-border bg-card/30">
+        <div
+          className="max-w-5xl mx-auto 
+                        grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 
+                        gap-3 sm:gap-4"
+        >
           {[
             { icon: Shield, text: "Dados criptografados" },
             { icon: Smartphone, text: "100% responsivo" },
@@ -537,10 +550,24 @@ export default function LandingPage() {
           ].map((item) => (
             <div
               key={item.text}
-              className="flex items-center gap-2 text-muted-foreground"
+              className="
+                flex items-center gap-3
+                rounded-xl px-4 py-3
+                border border-white/5
+                bg-gradient-to-r from-white/5 to-transparent
+                backdrop-blur-sm
+                transition-all duration-300
+                hover:border-primary/40
+              "
             >
-              <item.icon className="h-5 w-5 text-primary/70" />
-              <span className="text-sm font-medium">{item.text}</span>
+              <item.icon
+                className="h-5 w-5 text-primary shrink-0 
+                drop-shadow-[0_0_6px_rgba(0,255,150,0.5)]"
+              />
+
+              <span className="text-sm sm:text-base text-muted-foreground font-medium">
+                {item.text}
+              </span>
             </div>
           ))}
         </div>
